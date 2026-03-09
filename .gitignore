@@ -32,5 +32,11 @@ build/
 ### VS Code ###
 .vscode/
 
-### Carpeta personalizada
+### Variables de entorno ###
+.env
+
+### Archivos internos de desarrollo ###
+CLAUDE.md
+.claude/
+configuracion_variables.md
 ola/

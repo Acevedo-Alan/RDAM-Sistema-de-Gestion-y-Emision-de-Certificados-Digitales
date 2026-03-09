@@ -1,0 +1,36 @@
+# ============================================================
+# RDAM Backend — Perfil de Test
+# Conecta a rdam_test en el PostgreSQL local (docker-compose).
+# El DDL completo (init.sql) ya fue ejecutado en esta BD.
+# ============================================================
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/rdam_test
+    username: rdam_app_user
+    password: alan1234
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  sql:
+    init:
+      mode: never
+  mail:
+    host: localhost
+    port: 1025
+    username: test
+    password: test
+
+jwt:
+  secret: test-secret-key-rdam-256bits-minimo-para-hmac-sha256
+  expiration-ms: 3600000
+  refresh-expiration-ms: 604800000
+
+pluspagos:
+  merchant-id: TEST_MERCHANT
+  secret: test-pluspagos-secret-key-32chars!!
+  url: http://localhost:9999
+
+adjuntos:
+  storage-path: ./target/test-adjuntos

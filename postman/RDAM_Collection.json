@@ -1,0 +1,897 @@
+{
+  "info": {
+    "_postman_id": "rdam-backend-2026",
+    "name": "RDAM Backend — Sistema de Certificados Digitales",
+    "description": "Coleccion completa de pruebas para RDAM Backend.\nIncluye autenticacion dual con OTP por email, FSM de solicitudes, pagos PlusPagos y certificados PDF.\n\nFlujo de uso:\n1. Ejecutar TC-01 (Login ciudadano) — envia OTP al email\n2. Copiar el codigo OTP del email y reemplazar en TC-01b\n3. Ejecutar TC-01b (Verify OTP) — captura JWT automaticamente\n4. Repetir con TC-02/TC-02b para el empleado interno\n5. Ejecutar el resto de los tests en orden secuencial\n\nLos scripts de Tests capturan automaticamente los tokens JWT y IDs de solicitud.\n\nAlumno: Alan Acevedo | Campus 2026\ni2T Software Factory",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url",              "value": "http://localhost:8080" },
+    { "key": "token_ciudadano",       "value": "" },
+    { "key": "token_interno",         "value": "" },
+    { "key": "solicitud_id",          "value": "" },
+    { "key": "solicitud_id_rechazo",  "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "description": "Autenticacion dual con verificacion OTP por email.\nFlujo: POST /auth/login (solo username+password, sin campo tipo) -> OTP al email -> POST /auth/verify -> retorna { token }.\n\nNOTA: AuthResponse retorna solo el campo 'token'. No hay refreshToken en este flujo.",
+      "item": [
+        {
+          "name": "TC-01 — Login ciudadano (envia OTP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"20123456789\",\n  \"password\": \"rdam1234\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// TC-01: LoginRequest tiene solo username y password — sin campo 'tipo'",
+                  "// AuthService detecta ciudadano/empleado automaticamente por CUIL vs legajo",
+                  "pm.test('TC-01: Login ciudadano retorna 200 y mensaje OTP', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json).to.not.have.property('token');",
+                  "    pm.expect(json).to.not.have.property('accessToken');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-01b — Verificar OTP ciudadano (obtiene JWT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"TU_EMAIL@gmail.com\",\n  \"codigo\": \"REEMPLAZAR_CON_CODIGO_OTP\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// AuthResponse: { token: '...' } — solo el campo 'token', no accessToken ni refreshToken",
+                  "pm.test('TC-01b: Verificacion OTP retorna JWT ciudadano', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json).to.not.have.property('accessToken');",
+                  "    pm.expect(json).to.not.have.property('refreshToken');",
+                  "    pm.expect(json).to.not.have.property('rol');",
+                  "    pm.collectionVariables.set('token_ciudadano', json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-02 — Login empleado interno (envia OTP)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"LEG001\",\n  \"password\": \"cualquier_valor\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// EmpleadoAuthProvider usa mock LDAP: acepta CUALQUIER password si el legajo existe en la DB",
+                  "pm.test('TC-02: Login interno retorna 200 y mensaje OTP', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.message).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json).to.not.have.property('token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-02b — Verificar OTP interno (obtiene JWT)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"REEMPLAZAR_CON_EMAIL_DEL_EMPLEADO\",\n  \"codigo\": \"REEMPLAZAR_CON_CODIGO_OTP\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-02b: Verificacion OTP retorna JWT interno', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.token).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json).to.not.have.property('accessToken');",
+                  "    pm.collectionVariables.set('token_interno', json.token);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-03 — Login credenciales invalidas",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"99999999999\",\n  \"password\": \"wrong\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-03: Credenciales invalidas retorna 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Error de autenticacion');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-04 — Acceso sin token (endpoint protegido)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoCertificadoId\": 1,\n  \"circunscripcionId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-04: Sin token retorna 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-05 — Token malformado",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer token.invalido.jwt" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoCertificadoId\": 1,\n  \"circunscripcionId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-05: Token malformado retorna 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-06 — Verificar OTP con codigo incorrecto",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"TU_EMAIL@gmail.com\",\n  \"codigo\": \"000000\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/verify",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "verify"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// OTP: maximo 5 intentos fallidos antes de invalidarse (MAX_ATTEMPTS=5 en OtpService)",
+                  "// PRECONDICION: ejecutar TC-01 primero para que haya un OTP activo en memoria",
+                  "pm.test('TC-06: Codigo OTP incorrecto retorna 401', function () {",
+                  "    pm.response.to.have.status(401);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Error de autenticacion');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Solicitudes — Ciudadano",
+      "description": "Operaciones del ciudadano sobre solicitudes.\n\nENDPOINTS DISPONIBLES:\n- POST /api/solicitudes — crear solicitud\n- GET  /api/solicitudes/{id}/pago-datos — obtener datos de pago (solo en APROBADA)",
+      "item": [
+        {
+          "name": "TC-07 — Crear solicitud",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoCertificadoId\": 1,\n  \"circunscripcionId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-07: Crear solicitud retorna 201 PENDIENTE_REVISION', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.id).to.be.a('number').and.above(0);",
+                  "    pm.expect(json.estado).to.eql('PENDIENTE_REVISION');",
+                  "    pm.expect(json.tipoCertificado).to.eql('Certificado de Libre Deuda Alimentaria');",
+                  "    pm.expect(json.createdAt).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.updatedAt).to.be.a('string').and.not.empty;",
+                  "    pm.collectionVariables.set('solicitud_id', json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-08 — Obtener datos de pago en estado incorrecto (FSM 422)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/pago-datos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "pago-datos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// PRECONDICION: solicitud en PENDIENTE_REVISION (recien creada en TC-07)",
+                  "pm.test('TC-08: Pago en PENDIENTE_REVISION retorna 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Estado invalido');",
+                  "    pm.expect(json.message).to.include('APROBADA');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Solicitudes — Operador Interno",
+      "description": "Operaciones del operador: tomar, aprobar, rechazar, emitir.\nTC-12 crea una segunda solicitud (solicitud_id_rechazo) para el flujo de rechazo paralelo.",
+      "item": [
+        {
+          "name": "TC-09 — Ciudadano intenta tomar solicitud (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/tomar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "tomar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-09: Ciudadano en endpoint interno retorna 403', function () {",
+                  "    pm.response.to.have.status(403);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-10 — Tomar solicitud (PENDIENTE_REVISION -> EN_REVISION)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/tomar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "tomar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-10: Tomar solicitud retorna 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-11 — Aprobar solicitud (EN_REVISION -> APROBADA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/aprobar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "aprobar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-11: Aprobar solicitud retorna 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-12 — Crear solicitud para rechazo (solicitud paralela)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoCertificadoId\": 1,\n  \"circunscripcionId\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-12: Crear solicitud para rechazo retorna 201', function () {",
+                  "    pm.response.to.have.status(201);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.id).to.be.a('number').and.above(0);",
+                  "    pm.expect(json.estado).to.eql('PENDIENTE_REVISION');",
+                  "    pm.collectionVariables.set('solicitud_id_rechazo', json.id);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-13 — Tomar solicitud para rechazo",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id_rechazo}}/tomar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id_rechazo}}", "tomar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-13: Tomar solicitud para rechazo retorna 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-14 — Rechazar solicitud (EN_REVISION -> RECHAZADA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type",  "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Documentacion incompleta\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id_rechazo}}/rechazar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id_rechazo}}", "rechazar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-14: Rechazar solicitud retorna 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-15 — Transicion invalida — FSM rechaza (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/tomar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "tomar"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "// PRECONDICION: solicitud_id en APROBADA (TC-11 ejecutado)",
+                  "pm.test('TC-15: Transicion invalida retorna 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Estado invalido');",
+                  "    pm.expect(json.message).to.include('PENDIENTE_REVISION');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Pagos",
+      "description": "Flujo de pago: generar datos encriptados para PlusPagos.\nLa solicitud debe estar en APROBADA para obtener datos de pago.",
+      "item": [
+        {
+          "name": "TC-16 — Obtener datos de pago (solicitud APROBADA)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/pago-datos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "pago-datos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-16: Datos de pago retorna 200 con todos los campos', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.Comercio).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.TransaccionComercioId).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.Monto).to.be.a('string').and.not.empty;",
+                  "    pm.expect(json.Informacion).to.be.a('string');",
+                  "    pm.expect(json.CallbackSuccess).to.be.a('string');",
+                  "    pm.expect(json.CallbackCancel).to.be.a('string');",
+                  "    pm.expect(json.UrlSuccess).to.be.a('string');",
+                  "    pm.expect(json.UrlError).to.be.a('string');",
+                  "    pm.expect(json.urlPasarela).to.be.a('string').and.not.empty;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-17 — Pagar solicitud ajena (403/404)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/9999/pago-datos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "9999", "pago-datos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-17: Solicitud ajena retorna 403 o 404', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([403, 404]);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-18 — Pagar solicitud RECHAZADA — FSM (422)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_ciudadano}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id_rechazo}}/pago-datos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id_rechazo}}", "pago-datos"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-18: Pago en RECHAZADA retorna 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Estado invalido');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Webhook PlusPagos",
+      "description": "Webhook de notificacion de pago. Endpoint publico (permitAll).\nCRITICO: PagoServiceImpl solo procesa webhooks con Estado='REALIZADA'.",
+      "item": [
+        {
+          "name": "TC-19 — Webhook pago REALIZADA (APROBADA -> PAGADA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Tipo\": \"PAGO\",\n  \"TransaccionPlataformaId\": \"PP-TXN-001\",\n  \"TransaccionComercioId\": \"SOL-{{solicitud_id}}\",\n  \"Monto\": \"500000\",\n  \"EstadoId\": \"3\",\n  \"Estado\": \"REALIZADA\",\n  \"FechaProcesamiento\": \"2026-03-08T03:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pagos/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pagos", "webhook"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-19: Webhook REALIZADA retorna 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-20 — Webhook duplicado (idempotencia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Tipo\": \"PAGO\",\n  \"TransaccionPlataformaId\": \"PP-TXN-001\",\n  \"TransaccionComercioId\": \"SOL-{{solicitud_id}}\",\n  \"Monto\": \"500000\",\n  \"EstadoId\": \"3\",\n  \"Estado\": \"REALIZADA\",\n  \"FechaProcesamiento\": \"2026-03-08T03:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pagos/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pagos", "webhook"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-20: Webhook duplicado retorna 200 (idempotente)', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-21 — Webhook payload incompleto (400)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Tipo\": \"PAGO\",\n  \"TransaccionPlataformaId\": \"PP-TXN-999\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pagos/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pagos", "webhook"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-21: Payload incompleto retorna 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Error de validacion');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-22 — Webhook estado no exitoso (ignorado silenciosamente)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"Tipo\": \"PAGO\",\n  \"TransaccionPlataformaId\": \"PP-TXN-004\",\n  \"TransaccionComercioId\": \"SOL-{{solicitud_id}}\",\n  \"Monto\": \"500000\",\n  \"EstadoId\": \"2\",\n  \"Estado\": \"RECHAZADO\",\n  \"FechaProcesamiento\": \"2026-03-08T04:00:00Z\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/pagos/webhook",
+              "host": ["{{base_url}}"],
+              "path": ["api", "pagos", "webhook"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-22: Webhook RECHAZADO retorna 200 sin cambio de estado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Certificados",
+      "description": "Emision de certificados PDF.\nPOST /api/solicitudes/{id}/emitir — operador emite (PAGADA -> EMITIDA)",
+      "item": [
+        {
+          "name": "TC-23 — Emitir certificado (PAGADA -> EMITIDA)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/emitir",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "emitir"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-23: Emitir certificado retorna 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "TC-24 — Emitir certificado ya emitido (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token_interno}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/solicitudes/{{solicitud_id}}/emitir",
+              "host": ["{{base_url}}"],
+              "path": ["api", "solicitudes", "{{solicitud_id}}", "emitir"]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('TC-24: Emitir certificado duplicado retorna 422', function () {",
+                  "    pm.response.to.have.status(422);",
+                  "    var json = pm.response.json();",
+                  "    pm.expect(json.error).to.eql('Estado invalido');",
+                  "    pm.expect(json.message).to.include('ya emitido');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

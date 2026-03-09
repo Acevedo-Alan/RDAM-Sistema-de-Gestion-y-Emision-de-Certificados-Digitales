@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/rdam}
+    username: ${DB_USERNAME:rdam_user}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:604800000}
+
+pluspagos:
+  merchant-id: ${PLUSPAGOS_MERCHANT_ID}
+  secret: ${PLUSPAGOS_SECRET}
+  url: ${PLUSPAGOS_URL}
+
+adjuntos:
+  storage-path: ${ADJUNTOS_PATH:./adjuntos}
