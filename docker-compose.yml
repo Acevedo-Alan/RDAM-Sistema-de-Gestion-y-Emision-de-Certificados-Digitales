@@ -1,0 +1,69 @@
+# Orquestador completo: DB + Backend + Frontend + PlusPagos Mock
+# Levantar desde C:\Users\alan_\OneDrive\Desktop\RDAM\:
+#   docker compose up --build -d
+#
+# La app queda disponible en http://localhost (puerto 80).
+# El backend sigue accesible en http://localhost:8080 si se necesita Postman.
+# El mock PlusPagos corre en http://localhost:8081
+
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: rdam_prod
+      POSTGRES_USER: rdam_app_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./rdam-backend/db-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rdam_app_user -d rdam_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: ./rdam-backend
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - ./rdam-backend/.env
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/rdam_prod
+      SPRING_DATASOURCE_USERNAME: rdam_app_user
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  frontend:
+    build:
+      context: ./rdam-frontend
+      args:
+        VITE_API_URL: ""
+    ports:
+      - "80:80"
+    depends_on:
+      app:
+        condition: service_healthy
+
+  pluspagos:
+    build: ./rdam-frontend/pluspagos-mock
+    ports:
+      - "8081:8081"
+    environment:
+      PLUSPAGOS_SECRET: mock-secret-desarrollo
+      BACKEND_URL: http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  pgdata:

@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create:*)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss:*)",
+      "Bash(npx tailwindcss@3 init -p)",
+      "Bash(mkdir -p src/pages/ciudadano src/pages/interno src/pages/admin)",
+      "Bash(touch src/pages/ciudadano/.gitkeep src/pages/interno/.gitkeep src/pages/admin/.gitkeep)",
+      "Bash(timeout 10 npx vite)",
+      "Bash(./mvnw test:*)",
+      "Read(//c/Users/alan_/OneDrive/Desktop/RDAM/rdam-backend/**)"
+    ]
+  }
+}

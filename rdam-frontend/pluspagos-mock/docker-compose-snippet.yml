@@ -1,0 +1,35 @@
+# Configuración para agregar a docker-compose.yml
+# 
+# Agrega este servicio a tu docker-compose.yml existente
+# (ubicado en la raíz del proyecto RDAM)
+
+services:
+  # ... otros servicios (app, postgres, etc.)
+
+  pluspagos:
+    build: ./rdam-frontend/pluspagos-mock
+    container_name: rdam-pluspagos-mock
+    ports:
+      - "8081:8081"
+    environment:
+      NODE_ENV: development
+      PORT: 8081
+      PLUSPAGOS_SECRET: mock-secret-desarrollo
+      BACKEND_URL: http://app:8080
+    depends_on:
+      app:
+        condition: service_healthy
+    networks:
+      - rdam-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8081/health', (r) => {if(r.statusCode !== 404) process.exit(0); process.exit(1);})"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+
+  # Asegúrate de que tu red está definida también:
+networks:
+  rdam-network:
+    driver: bridge
