@@ -9,7 +9,8 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import PageHeader from '../../components/common/PageHeader';
-import { getTiposCertificado, getCircunscripciones } from '../../api/endpoints/catalogos';
+import { CIRCUNSCRIPCIONES_OPTIONS } from '../../utils/formatters';
+import { getTiposCertificado } from '../../api/endpoints/catalogos';
 import { crearSolicitud } from '../../api/endpoints/solicitudes';
 import { uploadAdjunto } from '../../api/endpoints/adjuntos';
 
@@ -34,22 +35,16 @@ export default function NuevaSolicitudPage() {
     queryFn: () => getTiposCertificado().then((r) => r.data),
   });
 
-  const { data: circunscripcionesData } = useQuery({
-    queryKey: ['circunscripciones'],
-    queryFn: () => getCircunscripciones().then((r) => r.data),
-  });
-
   const tipos = Array.isArray(tiposData) ? tiposData : [];
-  const circunscripciones = Array.isArray(circunscripcionesData) ? circunscripcionesData : [];
 
   const tipoSeleccionado = tipos.find((t) => t.id === tipoCertificadoId);
-  const circunscripcionSeleccionada = circunscripciones.find((c) => c.id === circunscripcionId);
+  const circunscripcionSeleccionada = CIRCUNSCRIPCIONES_OPTIONS.find((c) => c.value === circunscripcionId);
 
   const enviarMutation = useMutation({
     mutationFn: async () => {
       const res = await crearSolicitud({
         tipoCertificadoId: Number(tipoCertificadoId),
-        circunscripcionId: Number(circunscripcionId),
+        circunscripcionId,
         observaciones,
       });
       const solicitudId = res.data.id;
@@ -144,8 +139,13 @@ export default function NuevaSolicitudPage() {
                 label="Circunscripcion"
                 onChange={(e) => setCircunscripcionId(e.target.value)}
               >
-                {circunscripciones.map((c) => (
-                  <MenuItem key={c.id} value={c.id}>{c.nombre}</MenuItem>
+                <MenuItem value="" disabled>
+                  Selecciona una circunscripcion
+                </MenuItem>
+                {CIRCUNSCRIPCIONES_OPTIONS.map((op) => (
+                  <MenuItem key={op.value} value={op.value}>
+                    {op.label}
+                  </MenuItem>
                 ))}
               </Select>
             </FormControl>
@@ -239,7 +239,7 @@ export default function NuevaSolicitudPage() {
                   <strong>Tipo de certificado:</strong> {tipoSeleccionado?.nombre ?? ''}
                 </Typography>
                 <Typography>
-                  <strong>Circunscripcion:</strong> {circunscripcionSeleccionada?.nombre ?? ''}
+                  <strong>Circunscripcion:</strong> {circunscripcionSeleccionada?.label ?? ''}
                 </Typography>
                 {observaciones && (
                   <Typography>

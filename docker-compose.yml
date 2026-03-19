@@ -61,6 +61,7 @@ services:
     environment:
       PLUSPAGOS_SECRET: mock-secret-desarrollo
       BACKEND_URL: http://app:8080
+      FRONTEND_URL: http://localhost
     depends_on:
       app:
         condition: service_healthy

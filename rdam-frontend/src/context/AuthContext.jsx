@@ -6,7 +6,7 @@ export const AuthContext = createContext(null);
 const STORAGE_KEY = 'accessToken';
 
 const HOME_BY_ROLE = {
-  admin: '/admin/usuarios',
+  admin: '/admin',
   interno: '/interno/bandeja',
   ciudadano: '/ciudadano/solicitudes',
 };
@@ -26,41 +26,59 @@ function isTokenExpired(token) {
   return decoded.exp * 1000 < Date.now();
 }
 
-function loadTokenFromStorage() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (!saved) return null;
-  if (isTokenExpired(saved)) {
-    localStorage.removeItem(STORAGE_KEY);
-    return null;
-  }
-  return saved;
-}
-
 export function AuthProvider({ children }) {
+  // ── Inicialización sincrónica: lee localStorage ANTES del primer render ──
   const [token, setToken] = useState(() => {
-    const saved = loadTokenFromStorage();
-    if (saved) window.__authToken = saved;
-    return saved;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && !isTokenExpired(saved)) {
+      window.__authToken = saved;
+      return saved;
+    }
+    return null;
   });
   const [user, setUser] = useState(() => {
-    const saved = loadTokenFromStorage();
-    return saved ? decodeToken(saved) : null;
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved && !isTokenExpired(saved)) return decodeToken(saved);
+    return null;
   });
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [sessionExpired, setSessionExpired] = useState(false);
   const navigate = useNavigate();
 
-  // Mark initialization complete after first render
+  // ── Side effects: limpieza de tokens expirados, logging ──
   useEffect(() => {
-    if (!token && window.location.pathname !== '/login'
-        && window.location.pathname !== '/register'
-        && window.location.pathname !== '/verify') {
+    console.log('[AUTH] Inicializando contexto...');
+    console.log('[AUTH] URL actual:', window.location.href);
+
+    const saved = localStorage.getItem(STORAGE_KEY);
+
+    if (saved && isTokenExpired(saved)) {
+      const decoded = decodeToken(saved);
+      console.warn(
+        '[AUTH] Token expirado, limpiando storage.',
+        'Expiró en:', decoded?.exp ? new Date(decoded.exp * 1000).toISOString() : 'N/A',
+        'Ahora:', new Date().toISOString()
+      );
+      localStorage.removeItem(STORAGE_KEY);
+      window.__authToken = null;
+      setToken(null);
+      setUser(null);
       setSessionExpired(true);
+    } else if (!saved) {
+      const isPublicRoute = ['/login', '/register', '/verify'].includes(window.location.pathname);
+      if (!isPublicRoute) {
+        console.warn('[AUTH] Ruta protegida sin token, marcando sesión expirada.');
+        setSessionExpired(true);
+      }
+    } else {
+      console.log('[AUTH] Token válido. Rol:', user?.rol);
     }
-    setIsLoading(false);
+
+    console.log('[AUTH] Inicialización completa.');
   }, []);
 
   const logout = useCallback(() => {
+    console.log('[AUTH] Logout ejecutado.');
     setToken(null);
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
@@ -72,6 +90,7 @@ export function AuthProvider({ children }) {
   const login = useCallback((newToken) => {
     const decoded = decodeToken(newToken);
     if (!decoded) return;
+    console.log('[AUTH] Login exitoso. Rol:', decoded.rol);
     setToken(newToken);
     setUser(decoded);
     localStorage.setItem(STORAGE_KEY, newToken);
@@ -80,7 +99,7 @@ export function AuthProvider({ children }) {
     navigate(HOME_BY_ROLE[decoded.rol] || '/login');
   }, [logout, navigate]);
 
-  // Expose logout to axios interceptor
+  // Exponer logout al interceptor de axios
   useEffect(() => {
     window.__authLogout = logout;
     return () => { window.__authLogout = null; };

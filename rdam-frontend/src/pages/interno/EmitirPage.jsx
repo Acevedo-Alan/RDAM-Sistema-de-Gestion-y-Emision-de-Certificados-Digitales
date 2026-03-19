@@ -45,7 +45,7 @@ export default function EmitirPage() {
     return <Alert severity="error">Error al cargar la solicitud</Alert>;
   }
 
-  if (solicitud?.estado !== 'PAGADA') {
+  if (solicitud?.estado !== 'PAGADO') {
     return (
       <>
         <Box sx={{ mb: 2 }}>
@@ -54,7 +54,7 @@ export default function EmitirPage() {
           </Button>
         </Box>
         <Alert severity="error">
-          Esta solicitud no se puede emitir. Debe estar en estado PAGADA.
+          Esta solicitud no se puede emitir. Debe estar en estado PAGADO.
         </Alert>
       </>
     );

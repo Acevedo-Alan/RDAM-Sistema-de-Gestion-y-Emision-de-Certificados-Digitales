@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import {
   Alert, Box, Button, Card, TextField, CircularProgress,
@@ -13,6 +14,7 @@ import StatusBadge from '../../components/common/StatusBadge';
 import { getHistorial } from '../../api/endpoints/solicitudes';
 
 export default function HistorialPage() {
+  const navigate = useNavigate();
   const [filtros, setFiltros] = useState({
     search: '',
     desde: null,
@@ -38,7 +40,7 @@ export default function HistorialPage() {
 
   const columns = [
     {
-      field: 'id',
+      field: 'solicitudId',
       headerName: 'N° Solicitud',
       width: 140,
       valueGetter: (value, row) => row.solicitudId ?? row.id ?? '',
@@ -46,29 +48,33 @@ export default function HistorialPage() {
     {
       field: 'estadoAnterior',
       headerName: 'Estado anterior',
-      width: 150,
+      width: 160,
+      valueFormatter: (value) => value ?? '—',
     },
     {
       field: 'estadoNuevo',
       headerName: 'Estado nuevo',
-      width: 150,
-      renderCell: (params) => <StatusBadge estado={params.row.estado ?? params.row.estadoNuevo} />,
+      width: 160,
+      renderCell: (params) => <StatusBadge estado={params.row.estadoNuevo ?? params.row.estado} />,
     },
     {
-      field: 'usuario',
+      field: 'usuarioNombre',
       headerName: 'Usuario',
       flex: 1,
+      valueGetter: (value, row) => row.usuarioNombre ?? row.usuario ?? '—',
     },
     {
-      field: 'fecha',
+      field: 'createdAt',
       headerName: 'Fecha y hora',
       width: 180,
-      valueFormatter: (value) => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '',
+      valueGetter: (value, row) => row.createdAt ?? row.fecha ?? null,
+      valueFormatter: (value) => value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '—',
     },
     {
-      field: 'observacion',
+      field: 'comentario',
       headerName: 'Observacion',
       flex: 1,
+      valueGetter: (value, row) => row.comentario ?? row.observacion ?? '—',
     },
   ];
 
@@ -133,7 +139,7 @@ export default function HistorialPage() {
             autoHeight
             pageSizeOptions={[10, 25, 50]}
             initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            disableRowSelectionOnClick
+            onRowClick={(params) => navigate(`/interno/solicitudes/${params.row.solicitudId ?? params.row.id}`)}
             sx={{
               border: 'none',
               '& .MuiDataGrid-columnHeaders': {
@@ -146,6 +152,7 @@ export default function HistorialPage() {
                 borderBottom: '1px solid #E6E6E6',
               },
               '& .MuiDataGrid-row': {
+                cursor: 'pointer',
                 '&:hover': {
                   bgcolor: '#F9F9F9',
                 },

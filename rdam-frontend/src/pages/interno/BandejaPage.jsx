@@ -13,7 +13,7 @@ import dayjs from 'dayjs';
 import PageHeader from '../../components/common/PageHeader';
 import StatusBadge from '../../components/common/StatusBadge';
 import {
-  getBandeja, tomarSolicitud,
+  getBandeja, tomarSolicitud, publicarSolicitud,
 } from '../../api/endpoints/solicitudes';
 
 export default function BandejaPage() {
@@ -45,6 +45,18 @@ export default function BandejaPage() {
     },
   });
 
+  const publicarMutation = useMutation({
+    mutationFn: (id) => publicarSolicitud(id),
+    onSuccess: () => {
+      setSnackbar({ open: true, message: 'Certificado emitido correctamente', severity: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['bandeja-solicitudes'] });
+    },
+    onError: (error) => {
+      const msg = error.response?.data?.message || 'Error al emitir el certificado';
+      setSnackbar({ open: true, message: msg, severity: 'error' });
+    },
+  });
+
   const solicitudes = Array.isArray(data) ? data : data?.content ?? [];
 
   const solicitudesConDias = solicitudes.map((sol) => ({
@@ -58,9 +70,10 @@ export default function BandejaPage() {
 
   const columns = [
     {
-      field: 'id',
-      headerName: 'N° Solicitud',
-      width: 140,
+      field: 'numeroTramite',
+      headerName: 'N° Tramite',
+      width: 200,
+      valueGetter: (value, row) => row.numeroTramite ?? row.id,
     },
     {
       field: 'ciudadano',
@@ -82,7 +95,7 @@ export default function BandejaPage() {
       field: 'circunscripcion',
       headerName: 'Circunscripcion',
       width: 150,
-      valueGetter: (value, row) => row.circunscripcion?.nombre ?? row.circunscripcionNombre ?? value ?? '',
+      valueGetter: (value, row) => row.circunscripcion ?? value ?? 'No especificada',
     },
     {
       field: 'fechaCreacion',
@@ -106,23 +119,13 @@ export default function BandejaPage() {
     {
       field: 'acciones',
       headerName: 'Acciones',
-      width: 100,
+      width: 240,
       sortable: false,
       filterable: false,
       renderCell: (params) => {
         const estado = params.row.estado;
         return (
           <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center', height: '100%' }}>
-            {estado === 'PENDIENTE_REVISION' && (
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => tomarMutation.mutate(params.row.id)}
-                disabled={tomarMutation.isPending}
-              >
-                Tomar
-              </Button>
-            )}
             <Button
               size="small"
               variant="outlined"
@@ -130,6 +133,27 @@ export default function BandejaPage() {
             >
               Ver
             </Button>
+            {(estado === 'PENDIENTE' || estado === 'PENDIENTE_REVISION') && (
+              <Button
+                size="small"
+                variant="contained"
+                onClick={() => tomarMutation.mutate(params.row.id)}
+                disabled={tomarMutation.isPending}
+              >
+                Tomar
+              </Button>
+            )}
+            {estado === 'PAGADO' && (
+              <Button
+                size="small"
+                variant="contained"
+                color="success"
+                onClick={() => publicarMutation.mutate(params.row.id)}
+                disabled={publicarMutation.isPending}
+              >
+                Emitir
+              </Button>
+            )}
           </Box>
         );
       },
@@ -162,13 +186,13 @@ export default function BandejaPage() {
               label="Estado"
             >
               <MenuItem value="Todos">Todos</MenuItem>
-              <MenuItem value="PENDIENTE_REVISION">Pendiente Revision</MenuItem>
-              <MenuItem value="EN_REVISION">En Revision</MenuItem>
-              <MenuItem value="APROBADA">Aprobada</MenuItem>
-              <MenuItem value="RECHAZADA">Rechazada</MenuItem>
-              <MenuItem value="PAGADA">Pagada</MenuItem>
-              <MenuItem value="EMITIDA">Emitida</MenuItem>
-              <MenuItem value="CANCELADA">Cancelada</MenuItem>
+              <MenuItem value="PENDIENTE">Pendiente</MenuItem>
+              <MenuItem value="PAGADO">Pagado</MenuItem>
+              <MenuItem value="PUBLICADO">Publicado</MenuItem>
+              <MenuItem value="PUBLICADO_VENCIDO">Publicado vencido</MenuItem>
+              <MenuItem value="VENCIDO">Vencido</MenuItem>
+              <MenuItem value="RECHAZADO">Rechazado</MenuItem>
+              <MenuItem value="CANCELADO">Cancelado</MenuItem>
             </Select>
           </FormControl>
 
@@ -217,7 +241,7 @@ export default function BandejaPage() {
             initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
             disableRowSelectionOnClick
             getRowClassName={(params) =>
-              params.row.diasEnEstado > 7 && params.row.estado === 'EN_REVISION' ? 'fila-demorada' : ''
+              params.row.diasEnEstado > 7 && params.row.estado === 'PENDIENTE' ? 'fila-demorada' : ''
             }
             sx={{
               border: 'none',

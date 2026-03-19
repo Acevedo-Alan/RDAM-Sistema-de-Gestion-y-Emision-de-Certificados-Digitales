@@ -9,6 +9,7 @@ import {
   Assessment as AssessmentIcon,
   History as HistoryIcon,
   Logout as LogoutIcon,
+  Dashboard as DashboardIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -22,6 +23,7 @@ const menuByRole = {
     { label: 'Historial', path: '/interno/historial', icon: <HistoryIcon /> },
   ],
   admin: [
+    { label: 'Dashboard', path: '/admin', icon: <DashboardIcon /> },
     { label: 'Usuarios', path: '/admin/usuarios', icon: <PeopleIcon /> },
     { label: 'Catalogos', path: '/admin/catalogos', icon: <CategoryIcon /> },
     { label: 'Reportes', path: '/admin/reportes', icon: <AssessmentIcon /> },
@@ -35,6 +37,7 @@ function NavItems({ items, onNavigate }) {
         <NavLink
           key={item.path}
           to={item.path}
+          end={item.path === '/admin'}
           onClick={onNavigate}
           style={{ textDecoration: 'none' }}
         >

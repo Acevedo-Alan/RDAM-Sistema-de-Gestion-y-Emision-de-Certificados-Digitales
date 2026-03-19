@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Environment files with secrets
+.env
+!.env.example
+
+# IDE
+.claude/
+.idea/
+.vscode/
+
+# Debug files
+DEBUG_*.js
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SQL fixes temporales
+fix_trigger.sql

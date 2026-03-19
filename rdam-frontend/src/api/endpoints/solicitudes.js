@@ -19,7 +19,7 @@ export const crearSolicitud = (data) =>
   api.post('/api/solicitudes', data);
 
 export const cancelarSolicitud = (id) =>
-  api.patch(`/api/solicitudes/${id}/cancelar`);
+  api.post(`/api/solicitudes/${id}/cancelar`);
 
 export const getPagoDatos = (id) =>
   api.get(`/api/solicitudes/${id}/pago-datos`);
@@ -44,6 +44,12 @@ export const getBandeja = () =>
 
 export const emitirCertificado = (id) =>
   api.post(`/api/certificados/emitir`, { solicitudId: id });
+
+export const publicarSolicitud = (id) =>
+  api.post(`/api/solicitudes/${id}/publicar`);
+
+export const verificarCertificado = (token) =>
+  api.get(`/api/verificar/${token}`);
 
 export const getInternos = () =>
   api.get('/api/admin/usuarios', { params: { rol: 'interno' } });

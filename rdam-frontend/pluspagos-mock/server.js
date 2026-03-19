@@ -109,409 +109,522 @@ function makeHttpRequest(targetUrl, payload) {
 
 function generateConfirmationPageHTML(monto, descripcion, transaccionId) {
   const montoFormateado = `$${formatPeso(monto)} ARS`;
+  const montoNum = parseFloat(formatPeso(monto));
+  const tasaServicio = (montoNum * 0.02).toFixed(2);
+  const totalConTasa = (montoNum + parseFloat(tasaServicio)).toFixed(2);
 
   return `<!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Pagos Seguro - PlusPagos</title>
+    <title>PlusPagos — Portal de Pagos</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: white;
             height: 100vh;
             overflow: hidden;
         }
-        
-        .root-container {
-            display: flex;
-            height: 100vh;
-        }
-        
-        .branding-column {
+        .root { display: flex; height: 100vh; }
+
+        /* ── Columna izquierda ── */
+        .left {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
+            width: 40%;
+            background: linear-gradient(160deg, #0F4A7C 0%, #005EA2 50%, #2378C3 100%);
+            padding: 48px;
             gap: 48px;
-            width: 50%;
-            background: linear-gradient(135deg, #0F4A7C 0%, #0A3456 100%);
-            padding: 60px 40px;
             flex-shrink: 0;
         }
-        
-        .branding-content {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
+        .logo-wrap { display: flex; align-items: center; gap: 12px; }
+        .logo-box {
+            width: 36px; height: 36px; background: white;
+            border-radius: 6px; display: flex; align-items: center; justify-content: center;
         }
-        
-        .branding-title {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-        
-        .branding-subtitle {
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .branding-footer {
-            position: absolute;
-            bottom: 40px;
-            left: 40px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 400;
-            letter-spacing: 0.3px;
-        }
-        
-        .form-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
+        .logo-r { color: #005EA2; font-weight: 700; font-size: 20px; }
+        .logo-name { color: white; font-weight: 700; font-size: 18px; }
+        .left-title { color: white; font-weight: 700; font-size: 28px; line-height: 1.3; }
+        .left-sub { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 8px; line-height: 1.6; }
+        .bullets { display: flex; flex-direction: column; gap: 12px; }
+        .bullet { display: flex; align-items: center; gap: 12px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .bullet-text { color: rgba(255,255,255,0.85); font-size: 13px; }
+        .left-footer { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 8px; }
+
+        /* ── Columna derecha ── */
+        .right {
             flex: 1;
             background: white;
-            padding: 40px;
-            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px;
             overflow-y: auto;
         }
-        
-        .form-wrapper {
-            width: 100%;
-            max-width: 450px;
-            animation: slideInRight 0.4s ease-out;
-        }
-        
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
-        .form-header {
-            margin-bottom: 32px;
-        }
-        
-        .form-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #1B1B1B;
-            margin-bottom: 8px;
-            letter-spacing: -0.5px;
-        }
-        
-        .form-subtitle {
-            font-size: 13px;
-            color: #A9AEB1;
-            font-weight: 400;
-            display: block;
-            text-align: center;
-            line-height: 1.5;
-        }
-        
-        .amount-highlight {
-            background: #F0F4F9;
+        .form-wrap { width: 100%; max-width: 420px; }
+
+        .page-title { font-size: 28px; font-weight: 700; color: #1B1B1B; margin-bottom: 4px; }
+        .page-sub { font-size: 14px; color: #71767A; margin-bottom: 4px; }
+        .page-caption { font-size: 11px; color: #A9AEB1; text-align: center; margin-bottom: 28px; }
+
+        /* Tarjeta resumen de monto */
+        .amount-card {
+            background: #F0F4F8;
             border-radius: 12px;
-            padding: 24px;
-            margin-bottom: 32px;
-            text-align: center;
-        }
-        
-        .amount-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6B7280;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 8px;
-            display: block;
-        }
-        
-        .amount-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #059669;
-            letter-spacing: -1px;
-        }
-        
-        .form-section {
-            margin-bottom: 24px;
-        }
-        
-        .form-label {
-            display: block;
-            font-size: 13px;
-            font-weight: 600;
-            color: #374151;
-            margin-bottom: 8px;
-            letter-spacing: 0.3px;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            font-size: 14px;
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            font-family: 'Roboto', sans-serif;
-            transition: all 0.2s ease;
-            background: white;
-            color: #1F2937;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #0F4A7C;
-            box-shadow: 0 0 0 3px rgba(15, 74, 124, 0.1);
-        }
-        
-        .form-input::placeholder {
-            color: #9CA3AF;
-        }
-        
-        .form-row {
+            border: 1px solid #DFE1E2;
+            padding: 20px 24px;
+            margin-bottom: 20px;
             display: flex;
-            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
         }
-        
-        .form-col {
-            flex: 1;
+        .amount-label { font-size: 12px; font-weight: 600; color: #71767A; text-transform: uppercase; letter-spacing: 0.4px; }
+        .amount-value { font-size: 32px; font-weight: 700; color: #1B1B1B; letter-spacing: -1px; margin-top: 4px; }
+        .amount-badge {
+            background: #E6F4EA; color: #1A6330;
+            font-size: 11px; font-weight: 600;
+            padding: 4px 10px; border-radius: 20px;
         }
-        
-        .transaction-info {
-            background: #FAFBFC;
+
+        /* Info transacción */
+        .txn-box {
+            background: #F8F9FA;
             border-radius: 8px;
+            border: 1px solid #DFE1E2;
+            border-left: 4px solid #005EA2;
             padding: 16px;
-            margin-bottom: 32px;
-            border-left: 4px solid #0F4A7C;
+            margin-bottom: 20px;
         }
-        
-        .transaction-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: #6B7280;
-            margin-bottom: 4px;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
+        .txn-label { font-size: 11px; font-weight: 600; color: #71767A; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 3px; }
+        .txn-value { font-size: 13px; color: #1B1B1B; font-weight: 500; word-break: break-all; }
+        .txn-divider { border: none; border-top: 1px solid #DFE1E2; margin: 12px 0; }
+
+        /* Resumen pago */
+        .resumen-section { margin-bottom: 20px; }
+        .section-label { font-size: 11px; font-weight: 600; color: #71767A; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 10px; }
+        .resumen-box { background: #F0F4F8; border-radius: 8px; border: 1px solid #DFE1E2; padding: 14px 16px; }
+        .resumen-row { display: flex; justify-content: space-between; font-size: 13px; color: #565C65; padding: 3px 0; }
+        .resumen-total {
+            display: flex; justify-content: space-between;
+            font-size: 15px; font-weight: 700; color: #1B1B1B;
+            border-top: 1px solid #DFE1E2; margin-top: 8px; padding-top: 10px;
         }
-        
-        .transaction-value {
-            font-size: 13px;
-            color: #1F2937;
-            font-weight: 500;
-            word-break: break-all;
+
+        /* Botones */
+        .btn-confirm {
+            width: 100%; padding: 14px;
+            background: #005EA2; color: white;
+            border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,94,162,0.3);
+            transition: background 0.15s;
+            margin-bottom: 10px;
         }
-        
-        .transaction-description {
-            margin-top: 12px;
-            padding-top: 12px;
-            border-top: 1px solid #E5E7EB;
+        .btn-confirm:hover { background: #0F4A7C; }
+        .btn-cancel {
+            width: 100%; padding: 12px;
+            background: white; color: #71767A;
+            border: 1px solid #DFE1E2; border-radius: 8px;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer;
+            transition: background 0.15s;
         }
-        
-        .transaction-desc-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: #6B7280;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-        }
-        
-        .transaction-desc-value {
-            font-size: 13px;
-            color: #374151;
-            font-weight: 400;
-            line-height: 1.5;
-        }
-        
-        .button-group {
+        .btn-cancel:hover { background: #F0F0F0; }
+
+        /* Seguridad */
+        .security { display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 16px; }
+        .security-icon { font-size: 13px; }
+        .security-text { font-size: 11px; color: #A9AEB1; }
+        .badge-ssl { background: #E6F4EA; color: #1A6330; font-size: 10px; font-weight: 600; padding: 2px 8px; border-radius: 4px; }
+
+        /* Campo de tarjeta */
+        .card-section { margin-bottom: 20px; }
+        .card-input-wrap {
+            position: relative;
             display: flex;
-            gap: 12px;
-            margin-bottom: 24px;
+            align-items: center;
         }
-        
-        .btn-primary {
-            flex: 1;
-            padding: 16px 24px;
-            background: #059669;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
-        }
-        
-        .btn-primary:hover {
-            background: #047857;
-            box-shadow: 0 8px 24px rgba(5, 150, 105, 0.4);
-            transform: translateY(-2px);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-        }
-        
-        .btn-secondary {
-            flex: 1;
-            padding: 16px 24px;
-            background: #F3F4F6;
-            color: #374151;
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        .btn-secondary:hover {
-            background: #E5E7EB;
-            border-color: #9CA3AF;
-        }
-        
-        .btn-secondary:active {
-            transform: translateY(0);
-        }
-        
-        .cancel-link {
+        .card-icon {
             position: absolute;
-            bottom: 32px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 13px;
-            color: #71767A;
-            text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s ease;
-            white-space: nowrap;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
         }
-        
-        .cancel-link:hover {
-            color: #0F4A7C;
+        .card-input {
+            width: 100%;
+            padding: 12px 44px 12px 14px;
+            border: 1px solid #DFE1E2;
+            border-radius: 8px;
+            font-size: 16px;
+            font-family: 'Segoe UI', monospace;
+            letter-spacing: 1.5px;
+            color: #1B1B1B;
+            background: white;
+            outline: none;
+            transition: box-shadow 0.15s, border-color 0.15s;
         }
-        
-        @media (max-width: 1024px) {
-            .branding-column {
-                display: none;
-            }
-            
-            .root-container {
-                flex-direction: column;
-            }
-            
-            .form-column {
-                width: 100%;
-            }
+        .card-input:focus {
+            border-color: #005EA2;
+            box-shadow: 0 0 0 3px rgba(0,94,162,0.12);
         }
-        
-        @media (max-width: 600px) {
-            .form-column {
-                padding: 24px;
-            }
-            
-            .form-wrapper {
-                max-width: 100%;
-            }
-            
-            .form-title {
-                font-size: 20px;
-            }
-            
-            .amount-value {
-                font-size: 28px;
-            }
-            
-            .branding-column {
-                padding: 32px 24px;
-                gap: 32px;
-            }
-            
-            .branding-title {
-                font-size: 24px;
-            }
+        .card-input::placeholder { color: #A9AEB1; letter-spacing: 1.5px; }
+        .card-hint { font-size: 11px; color: #A9AEB1; margin-top: 6px; }
+
+        /* Campos del formulario */
+        .form-field { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 11px; font-weight: 600; color: #71767A; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+        .form-input {
+            width: 100%; padding: 12px 14px;
+            border: 1px solid #DFE1E2; border-radius: 8px;
+            font-size: 14px; color: #1B1B1B;
+            background: white; outline: none;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            transition: box-shadow 0.15s, border-color 0.15s;
+        }
+        .form-input:focus { border-color: #005EA2; box-shadow: 0 0 0 3px rgba(0,94,162,0.12); }
+        .form-input::placeholder { color: #A9AEB1; }
+        .form-row { display: flex; gap: 12px; margin-bottom: 16px; }
+        .form-row .form-field { flex: 1; margin-bottom: 0; }
+        .form-error { color: #D42A2A; font-size: 13px; margin-bottom: 12px; display: none; }
+
+        /* Loading state */
+        .loading-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.85);
+            align-items: center; justify-content: center;
+            flex-direction: column; gap: 16px;
+            z-index: 100;
+        }
+        .spinner {
+            width: 40px; height: 40px;
+            border: 3px solid #DFE1E2;
+            border-top-color: #005EA2;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-size: 14px; color: #71767A; font-weight: 500; }
+
+        @media (max-width: 900px) {
+            .left { display: none; }
+            .root { flex-direction: column; }
+            .right { width: 100%; padding: 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="root-container">
-        <div class="branding-column">
-            <div class="branding-content">
-                <div class="branding-title">Portal de Pagos Seguro</div>
-                <div class="branding-subtitle">Estas a un paso de completar tu tramite en RDAM</div>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Procesando pago...</div>
+    </div>
+
+    <div class="root">
+        <div class="left">
+            <div class="logo-wrap">
+                <div class="logo-box"><span class="logo-r">R</span></div>
+                <span class="logo-name">RDAM</span>
             </div>
-            <div class="branding-footer">Mock de Integracion PlusPagos — Entorno de Desarrollo</div>
+            <div>
+                <div class="left-title">Sistema de Gestion de Certificados Digitales</div>
+                <div class="left-sub">Plataforma oficial para la gestion integral de certificados. Pago seguro y verificado.</div>
+            </div>
+            <div class="bullets">
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Transaccion cifrada con TLS</span></div>
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Certificado emitido al instante</span></div>
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Comprobante enviado por email</span></div>
+                <div class="left-footer">Poder Judicial de la Provincia de Santa Fe — 2026</div>
+            </div>
         </div>
-        
-        <div class="form-column">
-            <div class="form-wrapper">
-                <div class="form-header">
-                    <div class="form-title">Detalles del Pago</div>
-                    <span class="form-subtitle">Sistema de Recaudacion de la Provincia de Santa Fe</span>
+
+        <div class="right">
+            <div class="form-wrap">
+                <div class="page-title">PlusPagos</div>
+                <div class="page-sub">Confirma los detalles antes de pagar</div>
+                <div class="page-caption">Registro de Actos y Documentos del Ambito de la Magistratura</div>
+
+                <!-- Monto destacado -->
+                <div class="amount-card">
+                    <div>
+                        <div class="amount-label">Total a pagar</div>
+                        <div class="amount-value">$${totalConTasa} ARS</div>
+                    </div>
+                    <div class="amount-badge">Pago seguro</div>
                 </div>
-                
-                <div class="amount-highlight">
-                    <span class="amount-label">Monto a pagar</span>
-                    <div class="amount-value">${montoFormateado}</div>
+
+                <!-- Info de transaccion -->
+                <div class="txn-box">
+                    <div class="txn-label">ID de Transaccion</div>
+                    <div class="txn-value">${transaccionId}</div>
+                    <hr class="txn-divider">
+                    <div class="txn-label">Descripcion</div>
+                    <div class="txn-value">${descripcion}</div>
                 </div>
-                
-                <div class="transaction-info">
-                    <div class="transaction-label">ID de Transaccion</div>
-                    <div class="transaction-value">${transaccionId}</div>
-                    
-                    <div class="transaction-description">
-                        <div class="transaction-desc-label">Descripcion</div>
-                        <div class="transaction-desc-value">${descripcion}</div>
+
+                <!-- Resumen -->
+                <div class="resumen-section">
+                    <div class="section-label">Resumen del pago</div>
+                    <div class="resumen-box">
+                        <div class="resumen-row"><span>Monto del tramite</span><span>$${montoNum.toFixed(2)} ARS</span></div>
+                        <div class="resumen-row"><span>Tasa de servicio (2%)</span><span>$${tasaServicio} ARS</span></div>
+                        <div class="resumen-total"><span>Total</span><span>$${totalConTasa} ARS</span></div>
                     </div>
                 </div>
-                
-                <form id="paymentForm" method="POST" action="/pluspagos/confirmar" style="display: none;">
+
+                <!-- Datos de la tarjeta -->
+                <div class="card-section">
+                    <div class="section-label">Datos de la tarjeta</div>
+
+                    <!-- Número de tarjeta -->
+                    <div class="form-field">
+                        <div class="card-input-wrap">
+                            <input
+                                type="text"
+                                id="cardNumber"
+                                class="card-input"
+                                placeholder="0000 0000 0000 0000"
+                                maxlength="19"
+                                autocomplete="off"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                            />
+                            <div class="card-icon" id="cardIcon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                    <rect x="2" y="5" width="20" height="14" rx="2" stroke="#A9AEB1" stroke-width="1.5"/>
+                                    <line x1="2" y1="10" x2="22" y2="10" stroke="#A9AEB1" stroke-width="1.5"/>
+                                    <rect x="5" y="13" width="6" height="2" rx="1" fill="#DFE1E2"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="card-hint">Solo visual — el número no se envía al servidor</div>
+                    </div>
+
+                    <!-- Nombre y Apellido -->
+                    <div class="form-field">
+                        <label class="form-label">Nombre y Apellido</label>
+                        <input type="text" id="cardName" class="form-input" placeholder="Tal como figura en la tarjeta" oninput="this.value = this.value.toUpperCase()" />
+                    </div>
+
+                    <!-- Vencimiento / CVC / DNI -->
+                    <div class="form-row">
+                        <div class="form-field">
+                            <label class="form-label">Vencimiento</label>
+                            <input type="text" id="cardExpiry" class="form-input" placeholder="MM/AA" maxlength="5" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">CVC</label>
+                            <input type="text" id="cardCvc" class="form-input" placeholder="•••" maxlength="3" inputmode="numeric" pattern="[0-9]*" autocomplete="off" />
+                        </div>
+                        <div class="form-field">
+                            <label class="form-label">DNI del Titular</label>
+                            <input type="text" id="cardDni" class="form-input" placeholder="12345678" maxlength="8" inputmode="numeric" />
+                        </div>
+                    </div>
+
+                    <div class="form-error" id="formError">Completá todos los campos de la tarjeta para continuar.</div>
+                </div>
+
+                <!-- Formularios ocultos -->
+                <form id="paymentForm" method="POST" action="/pluspagos/confirmar">
                     <input type="hidden" name="transaccionId" value="${transaccionId}">
                 </form>
-                
-                <form id="cancelForm" method="POST" action="/pluspagos/cancelar" style="display: none;">
+                <form id="cancelForm" method="POST" action="/pluspagos/cancelar">
                     <input type="hidden" name="transaccionId" value="${transaccionId}">
                 </form>
-                
-                <div class="button-group">
-                    <button class="btn-primary" onclick="document.getElementById('paymentForm').submit(); return false;">
-                        Confirmar Pago
-                    </button>
-                    <button class="btn-secondary" onclick="document.getElementById('cancelForm').submit(); return false;">
-                        Cancelar
-                    </button>
+
+                <!-- Botones -->
+                <button class="btn-confirm" onclick="confirmarPago()">
+                    Confirmar y pagar $${totalConTasa} ARS
+                </button>
+                <button class="btn-cancel" onclick="document.getElementById('cancelForm').submit()">
+                    Cancelar y volver al sistema RDAM
+                </button>
+
+                <div class="security">
+                    <span class="security-icon">🔒</span>
+                    <span class="security-text">Transaccion cifrada y segura</span>
+                    <span class="badge-ssl">SSL</span>
                 </div>
             </div>
-            
-            <a href="#" class="cancel-link" onclick="document.getElementById('cancelForm').submit(); return false;">
-                Cancelar y volver al sistema RDAM
-            </a>
+        </div>
+    </div>
+
+    <script>
+        var ICON_GENERIC = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#A9AEB1" stroke-width="1.5"/><line x1="2" y1="10" x2="22" y2="10" stroke="#A9AEB1" stroke-width="1.5"/><rect x="5" y="13" width="6" height="2" rx="1" fill="#DFE1E2"/></svg>';
+        var ICON_VISA = '<svg width="24" height="24" viewBox="0 0 48 32" fill="none"><rect width="48" height="32" rx="4" fill="#1A1F71"/><path d="M19.5 21H17L18.9 11H21.4L19.5 21ZM15.2 11L12.8 18L12.5 16.5L11.6 12C11.6 12 11.5 11 10.2 11H6.1L6 11.2C6 11.2 7.5 11.5 9.2 12.5L11.4 21H14L18 11H15.2ZM36 21H38.5L36.3 11H34.3C33.2 11 32.9 11.8 32.9 11.8L29 21H31.5L32 19.5H35.1L35.4 21H36ZM32.8 17.5L34.1 13.7L34.9 17.5H32.8ZM28.5 13.5L28.8 11.8C28.8 11.8 27.5 11.3 26.1 11.3C24.6 11.3 21.5 12 21.5 14.7C21.5 17.2 25 17.2 25 18.5C25 19.8 21.9 19.5 20.7 18.7L20.4 20.5C20.4 20.5 21.7 21.1 23.5 21.1C25.3 21.1 28.2 20.1 28.2 17.6C28.2 15 24.7 14.8 24.7 13.7C24.7 12.6 27.1 12.8 28.5 13.5Z" fill="white"/></svg>';
+        var ICON_MC = '<svg width="24" height="24" viewBox="0 0 48 32" fill="none"><rect width="48" height="32" rx="4" fill="#252525"/><circle cx="19" cy="16" r="9" fill="#EB001B"/><circle cx="29" cy="16" r="9" fill="#F79E1B"/><path d="M24 9.3A9 9 0 0 1 27.5 16A9 9 0 0 1 24 22.7A9 9 0 0 1 20.5 16A9 9 0 0 1 24 9.3Z" fill="#FF5F00"/></svg>';
+
+        // Número de tarjeta — formateo y detección de franquicia
+        document.getElementById('cardNumber').addEventListener('input', function() {
+            var digits = this.value.replace(/\D/g, '').slice(0, 16);
+            var formatted = digits.replace(/(\d{4})(?=\d)/g, '$1 ');
+            if (this.value !== formatted) {
+                var pos = this.selectionStart;
+                this.value = formatted;
+                this.selectionStart = pos;
+                this.selectionEnd = pos;
+            }
+
+            var icon = document.getElementById('cardIcon');
+            if (digits.charAt(0) === '4') {
+                icon.innerHTML = ICON_VISA;
+            } else if (digits.charAt(0) === '5') {
+                icon.innerHTML = ICON_MC;
+            } else {
+                icon.innerHTML = ICON_GENERIC;
+            }
+        });
+
+        // Vencimiento — auto-slash al tercer carácter (sin duplicar)
+        document.getElementById('cardExpiry').addEventListener('input', function() {
+            var val = this.value.replace(/\D/g, '').slice(0, 4);
+            if (val.length >= 3) {
+                var month = val.slice(0, 2);
+                var year = val.slice(2);
+                this.value = month + '/' + year;
+            } else {
+                this.value = val;
+            }
+        });
+
+        // CVC — solo dígitos
+        document.getElementById('cardCvc').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 3);
+        });
+
+        // DNI — solo dígitos
+        document.getElementById('cardDni').addEventListener('input', function() {
+            this.value = this.value.replace(/\D/g, '').slice(0, 8);
+        });
+
+        function confirmarPago() {
+            var cardNum = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            var cardName = document.getElementById('cardName').value.trim();
+            var cardExpiry = document.getElementById('cardExpiry').value.trim();
+            var cardCvc = document.getElementById('cardCvc').value.trim();
+            var cardDni = document.getElementById('cardDni').value.trim();
+
+            if (!cardNum || !cardName || !cardExpiry || !cardCvc || !cardDni) {
+                document.getElementById('formError').style.display = 'block';
+                return;
+            }
+            document.getElementById('formError').style.display = 'none';
+            document.getElementById('loadingOverlay').style.display = 'flex';
+            document.getElementById('paymentForm').submit();
+        }
+    </script>
+</body>
+</html>`;
+}
+
+function generateCancelPageHTML(urlVolver) {
+  const url = urlVolver || process.env.FRONTEND_URL || 'http://localhost:5173/ciudadano/solicitudes';
+  return `<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pago cancelado — RDAM</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white; height: 100vh; overflow: hidden;
+        }
+        .root { display: flex; height: 100vh; }
+        .left {
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: flex-start;
+            width: 40%;
+            background: linear-gradient(160deg, #0F4A7C 0%, #005EA2 50%, #2378C3 100%);
+            padding: 48px; gap: 48px; flex-shrink: 0;
+        }
+        .logo-wrap { display: flex; align-items: center; gap: 12px; }
+        .logo-box { width: 36px; height: 36px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .logo-r { color: #005EA2; font-weight: 700; font-size: 20px; }
+        .logo-name { color: white; font-weight: 700; font-size: 18px; }
+        .left-title { color: white; font-weight: 700; font-size: 28px; line-height: 1.3; }
+        .left-sub { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 8px; line-height: 1.6; }
+        .bullets { display: flex; flex-direction: column; gap: 12px; }
+        .bullet { display: flex; align-items: center; gap: 12px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .bullet-text { color: rgba(255,255,255,0.85); font-size: 13px; }
+        .left-footer { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 8px; }
+
+        .right {
+            flex: 1; background: white;
+            display: flex; align-items: center; justify-content: center;
+            padding: 48px; overflow-y: auto;
+        }
+        .cancel-wrap { width: 100%; max-width: 420px; text-align: center; }
+        .cancel-icon {
+            width: 64px; height: 64px; margin: 0 auto 20px;
+        }
+        .cancel-title { font-size: 28px; font-weight: 700; color: #1B1B1B; margin-bottom: 8px; }
+        .cancel-sub { font-size: 14px; color: #71767A; margin-bottom: 8px; line-height: 1.6; }
+        .cancel-caption { font-size: 11px; color: #A9AEB1; text-align: center; margin-bottom: 28px; }
+        .btn-primary {
+            width: 100%; padding: 14px;
+            background: #005EA2; color: white;
+            border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,94,162,0.3);
+            margin-bottom: 12px; transition: background 0.15s;
+        }
+        .btn-primary:hover { background: #0F4A7C; }
+        .help-text { font-size: 13px; color: #71767A; text-align: center; }
+
+        @media (max-width: 900px) {
+            .left { display: none; }
+            .root { flex-direction: column; }
+            .right { width: 100%; padding: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="root">
+        <div class="left">
+            <div class="logo-wrap">
+                <div class="logo-box"><span class="logo-r">R</span></div>
+                <span class="logo-name">RDAM</span>
+            </div>
+            <div>
+                <div class="left-title">Sistema de Gestión de Certificados Digitales</div>
+                <div class="left-sub">Podés reintentar el pago cuando quieras.</div>
+            </div>
+            <div class="bullets">
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Tu solicitud sigue en estado Aprobada</span></div>
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">No se realizó ningún cobro</span></div>
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Podés volver a intentar el pago</span></div>
+            </div>
+            <div class="left-footer">Poder Judicial de la Provincia de Santa Fe — 2026</div>
+        </div>
+
+        <div class="right">
+            <div class="cancel-wrap">
+                <div class="cancel-icon">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                        <circle cx="32" cy="32" r="30" stroke="#71767A" stroke-width="2.5" fill="none"/>
+                        <line x1="22" y1="22" x2="42" y2="42" stroke="#71767A" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="42" y1="22" x2="22" y2="42" stroke="#71767A" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="cancel-title">Pago cancelado</div>
+                <div class="cancel-sub">No se procesó ningún cobro. Tu solicitud permanece en estado Aprobada y podés retomar el pago cuando lo desees.</div>
+                <div class="cancel-caption">Registro de Actos y Documentos del Ámbito de la Magistratura</div>
+
+                <button class="btn-primary" onclick="window.location.href='${url}'">
+                    Volver al sistema RDAM
+                </button>
+                <div class="help-text">¿Necesitás ayuda? Contactá a soporte@rdam.gob.ar</div>
+            </div>
         </div>
     </div>
 </body>
@@ -524,244 +637,122 @@ function generateErrorPageHTML(titulo, mensaje) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Error - Portal de Pagos</title>
+    <title>Error — Portal de Pagos</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: white;
-            height: 100vh;
-            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: white; height: 100vh; overflow: hidden;
         }
-        
-        .root-container {
-            display: flex;
-            height: 100vh;
+        .root { display: flex; height: 100vh; }
+        .left {
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: flex-start;
+            width: 40%;
+            background: linear-gradient(160deg, #0F4A7C 0%, #005EA2 50%, #2378C3 100%);
+            padding: 48px; gap: 48px; flex-shrink: 0;
         }
-        
-        .branding-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 48px;
-            width: 50%;
-            background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
-            padding: 60px 40px;
-            flex-shrink: 0;
+        .logo-wrap { display: flex; align-items: center; gap: 12px; }
+        .logo-box { width: 36px; height: 36px; background: white; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+        .logo-r { color: #005EA2; font-weight: 700; font-size: 20px; }
+        .logo-name { color: white; font-weight: 700; font-size: 18px; }
+        .left-title { color: white; font-weight: 700; font-size: 28px; line-height: 1.3; }
+        .left-sub { color: rgba(255,255,255,0.75); font-size: 14px; margin-top: 8px; line-height: 1.6; }
+        .bullets { display: flex; flex-direction: column; gap: 12px; }
+        .bullet { display: flex; align-items: center; gap: 12px; }
+        .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.5); flex-shrink: 0; }
+        .bullet-text { color: rgba(255,255,255,0.85); font-size: 13px; }
+        .left-footer { color: rgba(255,255,255,0.5); font-size: 11px; margin-top: 8px; }
+
+        .right {
+            flex: 1; background: white;
+            display: flex; align-items: center; justify-content: center;
+            padding: 48px; overflow-y: auto;
         }
-        
-        .branding-content {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 16px;
-        }
-        
-        .branding-title {
-            font-size: 32px;
-            font-weight: 700;
-            line-height: 1.2;
-            color: white;
-            letter-spacing: -0.5px;
-        }
-        
-        .branding-subtitle {
-            font-size: 14px;
-            font-weight: 400;
-            line-height: 1.6;
-            color: rgba(255, 255, 255, 0.8);
-        }
-        
-        .branding-footer {
-            position: absolute;
-            bottom: 40px;
-            left: 40px;
-            font-size: 12px;
-            color: rgba(255, 255, 255, 0.5);
-            font-weight: 400;
-            letter-spacing: 0.3px;
-        }
-        
-        .form-column {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            flex: 1;
-            background: white;
-            padding: 40px;
-            position: relative;
-            overflow-y: auto;
-        }
-        
-        .error-wrapper {
-            width: 100%;
-            max-width: 450px;
-            text-align: center;
-            animation: slideInRight 0.4s ease-out;
-        }
-        
-        @keyframes slideInRight {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-        
+        .error-wrap { width: 100%; max-width: 420px; }
         .error-icon {
-            font-size: 64px;
-            margin-bottom: 24px;
-            display: block;
+            width: 64px; height: 64px; margin-bottom: 20px;
         }
-        
-        .error-title {
-            font-size: 24px;
-            font-weight: 700;
-            color: #DC2626;
-            margin-bottom: 12px;
-            letter-spacing: -0.5px;
+        .error-title { font-size: 28px; font-weight: 700; color: #1B1B1B; margin-bottom: 4px; }
+        .error-sub { font-size: 14px; color: #71767A; margin-bottom: 24px; line-height: 1.6; }
+
+        .error-detail {
+            background: #FEF2F2; border-radius: 8px;
+            border: 1px solid #FECACA; border-left: 4px solid #D42A2A;
+            padding: 16px; margin-bottom: 24px;
         }
-        
-        .error-message {
-            font-size: 14px;
-            color: #6B7280;
-            line-height: 1.6;
-            margin-bottom: 32px;
-            font-weight: 400;
-        }
-        
-        .error-code {
-            background: #FEF2F2;
-            border-radius: 8px;
-            padding: 16px;
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #7F1D1D;
-            margin-bottom: 32px;
-            word-break: break-all;
-            border-left: 4px solid #DC2626;
-        }
-        
-        .error-actions {
-            display: flex;
-            gap: 12px;
-        }
-        
+        .error-detail-label { font-size: 11px; font-weight: 600; color: #71767A; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; }
+        .error-detail-msg { font-size: 13px; color: #1B1B1B; line-height: 1.5; }
+        .error-ts { font-size: 11px; color: #A9AEB1; margin-top: 8px; font-family: monospace; }
+
         .btn-retry {
-            flex: 1;
-            padding: 12px 24px;
-            background: #DC2626;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+            width: 100%; padding: 14px;
+            background: #005EA2; color: white;
+            border: none; border-radius: 8px;
+            font-size: 15px; font-weight: 600; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,94,162,0.3);
+            margin-bottom: 10px; transition: background 0.15s;
         }
-        
-        .btn-retry:hover {
-            background: #991B1B;
-            box-shadow: 0 8px 24px rgba(220, 38, 38, 0.4);
-            transform: translateY(-2px);
-        }
-        
+        .btn-retry:hover { background: #0F4A7C; }
         .btn-back {
-            flex: 1;
-            padding: 12px 24px;
-            background: #F3F4F6;
-            color: #374151;
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            font-size: 14px;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            width: 100%; padding: 12px;
+            background: white; color: #71767A;
+            border: 1px solid #DFE1E2; border-radius: 8px;
+            font-size: 14px; font-weight: 500; cursor: pointer;
+            transition: background 0.15s;
         }
-        
-        .btn-back:hover {
-            background: #E5E7EB;
-            border-color: #9CA3AF;
-        }
-        
-        @media (max-width: 1024px) {
-            .branding-column {
-                display: none;
-            }
-            
-            .root-container {
-                flex-direction: column;
-            }
-            
-            .form-column {
-                width: 100%;
-            }
-        }
-        
-        @media (max-width: 600px) {
-            .form-column {
-                padding: 24px;
-            }
-            
-            .error-wrapper {
-                max-width: 100%;
-            }
-            
-            .error-title {
-                font-size: 20px;
-            }
-            
-            .branding-column {
-                padding: 32px 24px;
-                gap: 32px;
-            }
-            
-            .branding-title {
-                font-size: 24px;
-            }
+        .btn-back:hover { background: #F0F0F0; }
+
+        @media (max-width: 900px) {
+            .left { display: none; }
+            .root { flex-direction: column; }
+            .right { width: 100%; padding: 24px; }
         }
     </style>
 </head>
 <body>
-    <div class="root-container">
-        <div class="branding-column">
-            <div class="branding-content">
-                <div class="branding-title">Portal de Pagos Seguro</div>
-                <div class="branding-subtitle">Estas a un paso de completar tu tramite en RDAM</div>
+    <div class="root">
+        <div class="left">
+            <div class="logo-wrap">
+                <div class="logo-box"><span class="logo-r">R</span></div>
+                <span class="logo-name">RDAM</span>
             </div>
-            <div class="branding-footer">Mock de Integracion PlusPagos — Entorno de Desarrollo</div>
+            <div>
+                <div class="left-title">Sistema de Gestión de Certificados Digitales</div>
+                <div class="left-sub">Plataforma oficial para la gestión integral de certificados.</div>
+            </div>
+            <div class="bullets">
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Transacción cifrada con TLS</span></div>
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Gestión de solicitudes en tiempo real</span></div>
+                <div class="bullet"><div class="dot"></div><span class="bullet-text">Emisión digital de certificados</span></div>
+            </div>
+            <div class="left-footer">Poder Judicial de la Provincia de Santa Fe — 2026</div>
         </div>
-        
-        <div class="form-column">
-            <div class="error-wrapper">
-                <span class="error-icon">!</span>
-                <div class="error-title">${titulo}</div>
-                <p class="error-message">${mensaje}</p>
-                <div class="error-code">${new Date().toISOString()}</div>
-                
-                <div class="error-actions">
-                    <button class="btn-retry" onclick="window.location.reload();">
-                        Reintentar
-                    </button>
-                    <button class="btn-back" onclick="window.history.back();">
-                        Volver
-                    </button>
+
+        <div class="right">
+            <div class="error-wrap">
+                <div class="error-icon">
+                    <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+                        <circle cx="32" cy="32" r="30" stroke="#D42A2A" stroke-width="2.5" fill="none"/>
+                        <line x1="22" y1="22" x2="42" y2="42" stroke="#D42A2A" stroke-width="2.5" stroke-linecap="round"/>
+                        <line x1="42" y1="22" x2="22" y2="42" stroke="#D42A2A" stroke-width="2.5" stroke-linecap="round"/>
+                    </svg>
                 </div>
+                <div class="error-title">${titulo}</div>
+                <div class="error-sub">${mensaje}</div>
+
+                <div class="error-detail">
+                    <div class="error-detail-label">Detalle del error</div>
+                    <div class="error-detail-msg">${mensaje}</div>
+                    <div class="error-ts">${new Date().toISOString()}</div>
+                </div>
+
+                <button class="btn-retry" onclick="window.location.reload()">
+                    Reintentar
+                </button>
+                <button class="btn-back" onclick="window.history.back()">
+                    Volver
+                </button>
             </div>
         </div>
     </div>
@@ -948,21 +939,30 @@ async function handleCancelarPost(req, res, body) {
     }
 
     const transaction = transactions.get(transaccionId);
+
     if (!transaction) {
-      throw new Error(`Transacción no encontrada: ${transaccionId}`);
+      // Transacción no encontrada = ya fue cancelada antes
+      // Asumir éxito silencioso y mostrar pantalla de cancelación
+      console.log('[POST /pluspagos/cancelar] Transacción ya procesada, retornando éxito idempotente');
+      const fallbackUrl = process.env.FRONTEND_URL || 'http://localhost:5173/ciudadano/solicitudes';
+      const html = generateCancelPageHTML(fallbackUrl);
+      res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      res.end(html);
+      return;
     }
 
     console.log(`[POST /pluspagos/cancelar] Transacción cancelada: ${transaccionId}`);
-    console.log(`[POST /pluspagos/cancelar] Redirigiendo a: ${transaction.urlError}`);
 
+    const urlError = transaction.urlError;
     // Limpiar transacción
     transactions.delete(transaccionId);
 
-    // Redirigir a URL de error/cancelación
-    res.writeHead(302, {
-      Location: transaction.urlError,
-    });
-    res.end();
+    // Mostrar página de cancelación con URL de vuelta
+    const html = generateCancelPageHTML(urlError);
+    res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+    res.end(html);
+
+    console.log(`[POST /pluspagos/cancelar] ✓ Página de cancelación enviada`);
   } catch (error) {
     console.error(`[POST /pluspagos/cancelar] ✗ Error:`, error.message);
 

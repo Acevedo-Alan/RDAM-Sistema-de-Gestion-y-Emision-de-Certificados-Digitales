@@ -2,34 +2,36 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  Alert, Box, Button, Card, CardContent, CircularProgress,
-  Snackbar, Typography,
+  Alert, Box, Button, Card, CardContent, Chip, CircularProgress,
+  Divider, Snackbar, Typography,
 } from '@mui/material';
+import Grid from '@mui/material/Grid';
 import {
   Timeline, TimelineItem, TimelineSeparator, TimelineConnector,
   TimelineContent, TimelineDot,
 } from '@mui/lab';
 import dayjs from 'dayjs';
+import { useAuth } from '../../hooks/useAuth';
 import PageHeader from '../../components/common/PageHeader';
 import StatusBadge from '../../components/common/StatusBadge';
 import ConfirmModal from '../../components/common/ConfirmModal';
 import RechazoModal from '../../components/common/RechazoModal';
-import estadoColors from '../../utils/estadoColors';
+import { formatTarjetaMock } from '../../utils/formatTarjeta';
 import {
   getSolicitud, getHistorialSolicitud,
   aprobarSolicitud, rechazarSolicitud,
+  publicarSolicitud,
 } from '../../api/endpoints/solicitudes';
 import { downloadAdjunto } from '../../api/endpoints/adjuntos';
 
 const DOT_COLOR_MAP = {
-  PENDIENTE_REVISION: '#FFBE2E',
-  EN_REVISION: '#2378C3',
-  APROBADA: '#00A91C',
-  RECHAZADA: '#D54309',
-  PENDIENTE_PAGO: '#936F38',
-  PAGADA: '#4D8055',
-  EMITIDA: '#0F4A7C',
-  CANCELADA: '#71767A',
+  PENDIENTE: '#FFBE2E',
+  PAGADO: '#4D8055',
+  PUBLICADO: '#0F4A7C',
+  PUBLICADO_VENCIDO: '#565C65',
+  VENCIDO: '#D54309',
+  RECHAZADO: '#D54309',
+  CANCELADO: '#71767A',
 };
 
 export default function RevisionSolicitudPage() {
@@ -37,6 +39,7 @@ export default function RevisionSolicitudPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
+  const { user } = useAuth();
   const [confirmarAprobarOpen, setConfirmarAprobarOpen] = useState(false);
   const [rechazarModalOpen, setRechazarModalOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
@@ -81,6 +84,20 @@ export default function RevisionSolicitudPage() {
     },
   });
 
+  const publicarMutation = useMutation({
+    mutationFn: () => publicarSolicitud(id),
+    onSuccess: () => {
+      setSnackbar({ open: true, message: 'Certificado publicado correctamente', severity: 'success' });
+      queryClient.invalidateQueries({ queryKey: ['solicitud-interno', id] });
+      queryClient.invalidateQueries({ queryKey: ['solicitud-historial', id] });
+      queryClient.invalidateQueries({ queryKey: ['bandeja-solicitudes'] });
+    },
+    onError: (error) => {
+      const msg = error.response?.data?.message || 'Error al publicar el certificado';
+      setSnackbar({ open: true, message: msg, severity: 'error' });
+    },
+  });
+
   if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 8 }}>
@@ -96,7 +113,7 @@ export default function RevisionSolicitudPage() {
   const estado = solicitud?.estado;
   const adjuntos = solicitud?.adjuntos ?? [];
   const historialItems = Array.isArray(historial) ? historial : [];
-  const puedeActuar = estado === 'EN_REVISION';
+  const puedeActuar = estado === 'PENDIENTE';
 
   return (
     <>
@@ -106,7 +123,7 @@ export default function RevisionSolicitudPage() {
         </Button>
       </Box>
 
-      <PageHeader title={`Solicitud #${solicitud?.id}`} />
+      <PageHeader title={`Tramite ${solicitud?.numeroTramite ?? solicitud?.id}`} />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Columna izquierda */}
@@ -116,15 +133,15 @@ export default function RevisionSolicitudPage() {
 
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
               <Typography>
-                <strong>N° Solicitud:</strong> {solicitud?.id}
+                <strong>N° Tramite:</strong> {solicitud?.numeroTramite}
               </Typography>
               <Typography>
                 <strong>Tipo de certificado:</strong>{' '}
-                {solicitud?.tipoCertificado?.nombre ?? solicitud?.tipoCertificadoNombre ?? ''}
+                {solicitud?.tipoCertificado ?? ''}
               </Typography>
               <Typography>
                 <strong>Circunscripcion:</strong>{' '}
-                {solicitud?.circunscripcion?.nombre ?? solicitud?.circunscripcionNombre ?? ''}
+                {solicitud?.circunscripcion ?? 'No especificada'}
               </Typography>
               <Typography>
                 <strong>Ciudadano:</strong>{' '}
@@ -132,7 +149,7 @@ export default function RevisionSolicitudPage() {
               </Typography>
               <Typography>
                 <strong>Fecha de creacion:</strong>{' '}
-                {solicitud?.fechaCreacion ? dayjs(solicitud.fechaCreacion).format('DD/MM/YYYY') : ''}
+                {solicitud?.createdAt ? dayjs(solicitud.createdAt).format('DD/MM/YYYY') : ''}
               </Typography>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                 <strong>Estado:</strong> <StatusBadge estado={estado} />
@@ -177,20 +194,35 @@ export default function RevisionSolicitudPage() {
                 {historialItems.map((item, index) => (
                   <TimelineItem key={index} sx={{ '&::before': { display: 'none' } }}>
                     <TimelineSeparator>
-                      <TimelineDot sx={{ bgcolor: DOT_COLOR_MAP[item.estado] ?? '#71767A' }} />
+                      <TimelineDot sx={{ bgcolor: DOT_COLOR_MAP[item.estadoNuevo] ?? '#71767A' }} />
                       {index < historialItems.length - 1 && <TimelineConnector />}
                     </TimelineSeparator>
                     <TimelineContent>
                       <Box>
-                        <StatusBadge estado={item.estado} />
+                        <StatusBadge estado={item.estadoNuevo} />
                         <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                          {item.usuario ?? ''}{' '}
-                          {item.fecha ? dayjs(item.fecha).format('DD/MM/YYYY HH:mm') : ''}
+                          {item.usuarioNombre ?? ''}{' '}
+                          {item.createdAt ? dayjs(item.createdAt).format('DD/MM/YYYY HH:mm') : ''}
                         </Typography>
-                        {item.observacion && (
+                        {item.comentario && (
                           <Typography variant="body2" sx={{ mt: 0.5 }}>
-                            {item.observacion}
+                            {item.comentario}
                           </Typography>
+                        )}
+                        {item.estadoNuevo === 'PAGADO' && solicitud?.pago && (
+                          <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+                            <Typography variant="caption" color="#71767A">
+                              {solicitud.pago.estadoPago === 'APROBADO' ? 'Aprobado' : solicitud.pago.estadoPago} · {solicitud.pago.proveedorPago}
+                            </Typography>
+                            <Typography variant="caption" color="#71767A">
+                              ID: {solicitud.pago.idExterno}
+                            </Typography>
+                            {solicitud.pago.numeroTarjeta && (
+                              <Typography variant="caption" color="#71767A">
+                                {formatTarjetaMock(solicitud.pago.numeroTarjeta)}
+                              </Typography>
+                            )}
+                          </Box>
                         )}
                       </Box>
                     </TimelineContent>
@@ -201,6 +233,61 @@ export default function RevisionSolicitudPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Datos del pago */}
+      {solicitud.estado === 'PAGADO' && solicitud.pago != null && (
+        <Card elevation={0} sx={{ border: '1px solid #DFE1E2', borderRadius: '8px', p: 3, mt: 3 }}>
+          <Typography variant="subtitle1" fontWeight={600}>Datos del pago</Typography>
+          <Divider sx={{ my: 1.5 }} />
+          <Grid container spacing={2}>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" color="#71767A">Estado</Typography>
+              <Box><Chip label="Aprobado" color="success" size="small" /></Box>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" color="#71767A">Proveedor</Typography>
+              <Typography variant="body2" fontWeight={500} color="#1B1B1B">{solicitud.pago.proveedorPago}</Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" color="#71767A">ID de transacción</Typography>
+              <Typography variant="body2" fontWeight={500} color="#1B1B1B">{solicitud.pago.idExterno}</Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" color="#71767A">Monto</Typography>
+              <Typography variant="body2" fontWeight={500} color="#1B1B1B">
+                {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(solicitud.pago.monto)} ARS
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Typography variant="caption" color="#71767A">Fecha de confirmación</Typography>
+              <Typography variant="body2" fontWeight={500} color="#1B1B1B">
+                {new Date(solicitud.pago.fechaConfirmacion).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+              </Typography>
+            </Grid>
+          </Grid>
+        </Card>
+      )}
+
+      {/* Boton publicar certificado */}
+      {estado === 'PAGADO' && (
+        <Card sx={{ mt: 3, p: 2 }}>
+          <Button
+            variant="contained"
+            onClick={() => publicarMutation.mutate()}
+            disabled={publicarMutation.isPending}
+            sx={{
+              bgcolor: '#005EA2',
+              borderRadius: '8px',
+              textTransform: 'none',
+              fontWeight: 600,
+              py: 1.5,
+              '&:hover': { bgcolor: '#0F4A7C' },
+            }}
+          >
+            {publicarMutation.isPending ? 'Publicando...' : 'Publicar certificado'}
+          </Button>
+        </Card>
+      )}
 
       {/* Botones de accion */}
       {puedeActuar && (

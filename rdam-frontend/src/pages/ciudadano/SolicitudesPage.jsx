@@ -30,9 +30,10 @@ export default function SolicitudesPage() {
 
   const columns = [
     {
-      field: 'id',
-      headerName: 'N° Solicitud',
-      width: 140,
+      field: 'numeroTramite',
+      headerName: 'N° Tramite',
+      width: 200,
+      valueGetter: (value, row) => row.numeroTramite ?? row.id,
     },
     {
       field: 'tipoCertificado',
@@ -76,12 +77,8 @@ export default function SolicitudesPage() {
             >
               Ver
             </Button>
-            {(estado === 'APROBADA' || estado === 'PENDIENTE_PAGO') && (
-              <Button size="small" variant="outlined" color="warning">
-                Pagar
-              </Button>
-            )}
-            {estado === 'EMITIDA' && (
+
+            {estado === 'PUBLICADO' && (
               <Button size="small" variant="outlined" color="success">
                 Descargar
               </Button>

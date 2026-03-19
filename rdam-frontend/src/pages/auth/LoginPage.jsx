@@ -321,8 +321,8 @@ export default function LoginPage() {
                 </Typography>
                 {[
                   { rol: 'Ciudadano', user: '20123456789', pass: 'Test1234' },
-                  { rol: 'Interno', user: 'EMP001', pass: '(cualquiera)' },
-                  { rol: 'Admin', user: 'ADMIN001', pass: '(cualquiera)' },
+                  { rol: 'Interno', user: 'EMP001', pass: 'Test1234' },
+                  { rol: 'Admin', user: 'ADMIN001', pass: 'Test1234' },
                 ].map((u) => (
                   <Typography key={u.rol} variant="caption" sx={{ color: '#565C65', display: 'block', lineHeight: 1.8 }}>
                     <strong>{u.rol}:</strong> {u.user} / {u.pass}
