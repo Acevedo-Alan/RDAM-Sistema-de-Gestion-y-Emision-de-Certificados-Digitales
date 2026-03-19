@@ -1,0 +1,42 @@
+{"properties": [
+  {
+    "name": "otp.from",
+    "type": "java.lang.String",
+    "description": "A description for 'otp.from'"
+  },
+  {
+    "name": "jwt.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.secret'"
+  },
+  {
+    "name": "jwt.expiration-ms",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.expiration-ms'"
+  },
+  {
+    "name": "jwt.refresh-expiration-ms",
+    "type": "java.lang.String",
+    "description": "A description for 'jwt.refresh-expiration-ms'"
+  },
+  {
+    "name": "pluspagos.merchant-id",
+    "type": "java.lang.String",
+    "description": "A description for 'pluspagos.merchant-id'"
+  },
+  {
+    "name": "pluspagos.secret",
+    "type": "java.lang.String",
+    "description": "A description for 'pluspagos.secret'"
+  },
+  {
+    "name": "pluspagos.url",
+    "type": "java.lang.String",
+    "description": "A description for 'pluspagos.url'"
+  },
+  {
+    "name": "adjuntos.storage-path",
+    "type": "java.lang.String",
+    "description": "A description for 'adjuntos.storage-path'"
+  }
+]}
