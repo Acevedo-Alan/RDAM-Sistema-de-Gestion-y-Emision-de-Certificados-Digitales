@@ -105,7 +105,11 @@ export default function SolicitudesPage() {
     return (
       <>
         <PageHeader title="Mis Solicitudes">
-          <Button variant="contained" onClick={() => navigate('/ciudadano/nueva')}>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: '#D4622A', color: 'white', fontWeight: 600, borderRadius: '8px', px: 3, '&:hover': { bgcolor: '#B85522' } }}
+            onClick={() => navigate('/ciudadano/nueva')}
+          >
             Nueva Solicitud
           </Button>
         </PageHeader>
@@ -113,7 +117,11 @@ export default function SolicitudesPage() {
           <Typography color="text.secondary">
             No tenes solicitudes. Crea tu primera solicitud.
           </Typography>
-          <Button variant="contained" onClick={() => navigate('/ciudadano/nueva')}>
+          <Button
+            variant="contained"
+            sx={{ bgcolor: '#D4622A', color: 'white', fontWeight: 600, borderRadius: '8px', px: 3, '&:hover': { bgcolor: '#B85522' } }}
+            onClick={() => navigate('/ciudadano/nueva')}
+          >
             Crear solicitud
           </Button>
         </Box>
@@ -124,11 +132,15 @@ export default function SolicitudesPage() {
   return (
     <>
       <PageHeader title="Mis Solicitudes">
-        <Button variant="contained" sx={{ bgcolor: '#005EA2', '&:hover': { bgcolor: '#0F4A7C' } }} onClick={() => navigate('/ciudadano/nueva')}>
+        <Button
+          variant="contained"
+          sx={{ bgcolor: '#D4622A', color: 'white', fontWeight: 600, borderRadius: '8px', px: 3, '&:hover': { bgcolor: '#B85522' } }}
+          onClick={() => navigate('/ciudadano/nueva')}
+        >
           Nueva Solicitud
         </Button>
       </PageHeader>
-      <Card sx={{ border: '1px solid #DCDEE0', borderRadius: 2, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+      <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
         <DataGrid
           rows={solicitudes}
           columns={columns}
@@ -146,25 +158,29 @@ export default function SolicitudesPage() {
           sx={{
             border: 'none',
             '& .MuiDataGrid-columnHeaders': {
-              bgcolor: '#F0F0F0',
+              bgcolor: 'action.selected',
               fontWeight: 700,
               fontSize: 12,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              color: '#454545',
-              borderBottom: '1px solid #E6E6E6',
+              color: 'text.secondary',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
             },
-            '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700, fontSize: 12, letterSpacing: '0.5px' },
+            '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 700, fontSize: 12, letterSpacing: '0.5px', color: 'text.primary' },
+            '& .MuiDataGrid-columnHeader': { color: 'text.primary' },
             '& .MuiDataGrid-row': { fontSize: 14 },
             '& .MuiDataGrid-row:hover': {
-              bgcolor: '#F9F9F9',
+              bgcolor: 'action.hover',
             },
             '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #E6E6E6',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
             },
             '& .MuiDataGrid-footerContainer': {
-              borderTop: '1px solid #E6E6E6',
-              bgcolor: '#F9F9F9',
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              bgcolor: 'action.hover',
             },
           }}
         />

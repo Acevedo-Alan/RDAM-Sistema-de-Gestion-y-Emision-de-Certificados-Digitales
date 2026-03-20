@@ -195,7 +195,7 @@ export default function OtpPage() {
       <Box
         sx={{
           width: { xs: '100%', md: '60%' },
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -220,7 +220,7 @@ export default function OtpPage() {
                 R
               </Typography>
             </Box>
-            <Typography sx={{ color: '#1B1B1B', fontWeight: 700, fontSize: 18 }}>
+            <Typography sx={{ color: 'text.primary', fontWeight: 700, fontSize: 18 }}>
               RDAM
             </Typography>
           </Box>
@@ -239,7 +239,7 @@ export default function OtpPage() {
           {/* Titulo */}
           <Typography
             variant="h5"
-            sx={{ fontWeight: 700, color: '#1B1B1B', textAlign: 'center' }}
+            sx={{ fontWeight: 700, color: 'text.primary', textAlign: 'center' }}
           >
             Revisa tu email
           </Typography>
@@ -247,7 +247,7 @@ export default function OtpPage() {
           {/* Subtitulo */}
           <Typography
             variant="body2"
-            sx={{ color: '#71767A', textAlign: 'center', mt: 1 }}
+            sx={{ color: 'text.secondary', textAlign: 'center', mt: 1 }}
           >
             Ingresa el codigo de 6 digitos enviado a
           </Typography>

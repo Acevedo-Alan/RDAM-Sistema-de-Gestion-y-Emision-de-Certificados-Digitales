@@ -258,19 +258,23 @@ export default function UsuariosPage() {
           sx={{
             border: 'none',
             '& .MuiDataGrid-columnHeaders': {
-              bgcolor: '#F0F0F0',
+              bgcolor: 'action.selected',
               fontWeight: 700,
               fontSize: 12,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
-              color: '#454545',
-              borderBottom: '1px solid #E6E6E6',
+              color: 'text.secondary',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
             },
+            '& .MuiDataGrid-columnHeaderTitle': { color: 'text.primary', fontWeight: 700 },
+            '& .MuiDataGrid-columnHeader': { color: 'text.primary' },
             '& .MuiDataGrid-row:hover': {
-              bgcolor: '#F9F9F9',
+              bgcolor: 'action.hover',
             },
             '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #E6E6E6',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
             },
           }}
         />

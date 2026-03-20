@@ -2,12 +2,12 @@ import { Snackbar, Alert } from '@mui/material';
 import { useAuth } from './hooks/useAuth';
 import AppRouter from './router';
 
-export default function App() {
+export default function App({ toggleMode, mode }) {
   const { sessionExpired, clearSessionExpired } = useAuth();
 
   return (
     <>
-      <AppRouter />
+      <AppRouter toggleMode={toggleMode} mode={mode} />
       <Snackbar
         open={sessionExpired}
         autoHideDuration={6000}

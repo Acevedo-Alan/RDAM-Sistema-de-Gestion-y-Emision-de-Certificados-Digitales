@@ -189,9 +189,7 @@ export default function VerificarCertificadoPage() {
                       Fecha de Emisión
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 600, color: '#1B1B1B' }}>
-                      {resultado.fechaEmision
-                        ? dayjs(resultado.fechaEmision).format('DD/MM/YYYY')
-                        : 'No disponible'}
+                      {resultado.fechaEmision ?? 'No disponible'}
                     </Typography>
                   </Box>
                 </Box>

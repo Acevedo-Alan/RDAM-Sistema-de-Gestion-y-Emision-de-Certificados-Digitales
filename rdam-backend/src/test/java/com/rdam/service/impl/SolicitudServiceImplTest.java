@@ -8,6 +8,7 @@ import com.rdam.domain.entity.Solicitud;
 import com.rdam.domain.entity.TipoCertificado;
 import com.rdam.domain.entity.Usuario;
 import com.rdam.dto.SolicitudResponse;
+import com.rdam.repository.CertificadoRepository;
 import com.rdam.repository.CircunscripcionRepository;
 import com.rdam.repository.EmpleadoRepository;
 import com.rdam.repository.SolicitudRepository;
@@ -63,6 +64,9 @@ class SolicitudServiceImplTest {
 
     @Mock
     private CircunscripcionRepository circunscripcionRepository;
+
+    @Mock
+    private CertificadoRepository certificadoRepository;
 
     @Mock
     private EntityManager entityManager;

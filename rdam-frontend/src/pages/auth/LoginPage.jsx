@@ -161,7 +161,7 @@ export default function LoginPage() {
       <Box
         sx={{
           width: { xs: '100%', md: '60%' },
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -186,7 +186,7 @@ export default function LoginPage() {
                 R
               </Typography>
             </Box>
-            <Typography sx={{ color: '#1B1B1B', fontWeight: 700, fontSize: 18 }}>
+            <Typography sx={{ color: 'text.primary', fontWeight: 700, fontSize: 18 }}>
               RDAM
             </Typography>
           </Box>
@@ -195,15 +195,15 @@ export default function LoginPage() {
             /* Estado Loading */
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <CircularProgress size={48} sx={{ color: '#005EA2', mb: 3 }} />
-              <Typography variant="h6" sx={{ fontWeight: 600, color: '#1B1B1B' }}>
+              <Typography variant="h6" sx={{ fontWeight: 600, color: 'text.primary' }}>
                 Verificando identidad
               </Typography>
-              <Typography variant="body2" sx={{ color: '#71767A', mt: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}>
                 Enviando codigo de verificacion a tu email...
               </Typography>
               <Button
                 variant="text"
-                sx={{ mt: 2, color: '#71767A', textTransform: 'none' }}
+                sx={{ mt: 2, color: 'text.secondary', textTransform: 'none' }}
                 onClick={handleCancelOtp}
               >
                 Cancelar
@@ -216,20 +216,20 @@ export default function LoginPage() {
                 variant="h4"
                 sx={{
                   fontWeight: 'bold',
-                  color: '#1B1B1B',
+                  color: 'text.primary',
                   mb: 1,
                 }}
               >
                 Bienvenido
               </Typography>
-              <Typography variant="body2" sx={{ color: '#71767A', mb: 1 }}>
+              <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
                 Ingresa tus credenciales para acceder al sistema
               </Typography>
               <Box sx={{ mb: 4, mt: 1 }}>
                 <Typography
                   variant="caption"
                   sx={{
-                    color: '#A9AEB1',
+                    color: 'text.disabled',
                     display: 'block',
                     textAlign: 'center',
                   }}
@@ -311,12 +311,13 @@ export default function LoginPage() {
                 sx={{
                   mt: 4,
                   p: 2,
-                  bgcolor: '#F0F0F0',
+                  bgcolor: 'action.hover',
                   borderRadius: '8px',
-                  border: '1px solid #DFE1E2',
+                  border: '1px solid',
+                  borderColor: 'divider',
                 }}
               >
-                <Typography variant="caption" sx={{ fontWeight: 600, color: '#71767A', display: 'block', mb: 1 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', display: 'block', mb: 1 }}>
                   Usuarios de prueba
                 </Typography>
                 {[
@@ -324,7 +325,7 @@ export default function LoginPage() {
                   { rol: 'Interno', user: 'EMP001', pass: 'Test1234' },
                   { rol: 'Admin', user: 'ADMIN001', pass: 'Test1234' },
                 ].map((u) => (
-                  <Typography key={u.rol} variant="caption" sx={{ color: '#565C65', display: 'block', lineHeight: 1.8 }}>
+                  <Typography key={u.rol} variant="caption" sx={{ color: 'text.secondary', display: 'block', lineHeight: 1.8 }}>
                     <strong>{u.rol}:</strong> {u.user} / {u.pass}
                   </Typography>
                 ))}
@@ -332,7 +333,7 @@ export default function LoginPage() {
 
               {/* Footer Link */}
               <Box sx={{ position: 'absolute', bottom: 32, left: 0, right: 0, textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ color: '#71767A' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   Ciudadano?{' '}
                   <Link
                     component={RouterLink}

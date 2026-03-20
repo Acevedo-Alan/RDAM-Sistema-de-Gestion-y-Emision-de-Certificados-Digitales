@@ -57,8 +57,8 @@ public class PagoServiceImpl implements PagoService {
             ObjectMapper objectMapper,
             @Value("${pluspagos.merchant-id}") String merchantId,
             @Value("${pluspagos.url}") String plusPagosUrl,
-            @Value("${app.backend-url:http://localhost:8080}") String backendUrl,
-            @Value("${app.frontend-url:http://localhost:5173}") String frontendUrl) {
+            @Value("${app.backend-url:http://app:8080}") String backendUrl,
+            @Value("${app.frontend-url:http://localhost}") String frontendUrl) {
         this.solicitudRepository = solicitudRepository;
         this.pagoRepository = pagoRepository;
         this.cryptoService = cryptoService;

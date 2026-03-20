@@ -19,6 +19,8 @@ export default function StatusBadge({ estado }) {
         px: 1.5,
         py: 0.5,
         whiteSpace: 'nowrap',
+        overflow: 'visible',
+        maxWidth: 'none',
       }}
     />
   );

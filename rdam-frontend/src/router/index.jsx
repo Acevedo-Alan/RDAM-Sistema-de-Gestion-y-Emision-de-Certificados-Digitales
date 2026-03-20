@@ -79,7 +79,7 @@ function RoleRoute({ role, children }) {
   ╚══════════════════════════════════════════════════════════════════╝
 */}
 
-export default function AppRouter() {
+export default function AppRouter({ toggleMode, mode }) {
   return (
     <Routes>
       {/* Public routes */}
@@ -92,7 +92,7 @@ export default function AppRouter() {
       <Route
         element={
           <ProtectedRoute>
-            <AppLayout />
+            <AppLayout toggleMode={toggleMode} mode={mode} />
           </ProtectedRoute>
         }
       >

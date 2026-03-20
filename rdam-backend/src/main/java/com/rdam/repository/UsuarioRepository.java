@@ -23,4 +23,8 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Integer> {
     List<Usuario> findByActivoTrue();
 
     Optional<Usuario> findByIdAndEliminadoEnIsNull(Integer id);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByCuil(String cuil);
 }

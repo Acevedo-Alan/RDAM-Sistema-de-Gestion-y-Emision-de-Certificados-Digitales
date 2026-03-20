@@ -117,114 +117,140 @@ export default function DetalleSolicitudPage() {
     }
   };
 
-  const handleDescargarCertificado = () => {
-    window.open(`/api/certificados/${id}/download`, '_blank');
-  };
+  const handleDescargarCertificado = async () => {
+  const certId = solicitud?.certificadoId;
+  if (!certId) return;
+  try {
+    const token = localStorage.getItem('accessToken');
+    const response = await fetch(`/api/certificados/${certId}/download`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error('Error al descargar');
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `certificado-${solicitud.numeroTramite}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch {
+    setSnackbar({ open: true, message: 'Error al descargar el certificado', severity: 'error' });
+  }
+};
 
-  if (searchParams.get('pago') === 'success') {
-    return (
-      <Box sx={{ display: 'flex', height: '100vh', overflow: 'hidden' }}>
-        {/* Columna izquierda */}
+if (searchParams.get('pago') === 'success') {
+  return (
+    <Box sx={{
+      minHeight: '100vh',
+      bgcolor: 'background.default',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      p: 3,
+    }}>
+      <Box sx={{
+        bgcolor: 'background.paper',
+        borderRadius: 3,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
+        p: { xs: 3, md: 5 },
+        width: '100%',
+        maxWidth: 480,
+        textAlign: 'center',
+      }}>
+        {/* Ícono de éxito */}
         <Box sx={{
-          display: { xs: 'none', md: 'flex' },
-          width: '40%',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          background: 'linear-gradient(160deg, #0F4A7C 0%, #005EA2 50%, #2378C3 100%)',
-          px: 8, py: 6,
-          gap: 6,
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <Box sx={{
-              width: 36, height: 36, bgcolor: 'white', borderRadius: '6px',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <Typography sx={{ color: '#005EA2', fontWeight: 700, fontSize: 20 }}>R</Typography>
-            </Box>
-            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: 20 }}>RDAM</Typography>
-          </Box>
-
-          <Box>
-            <Typography variant="h3" sx={{ color: 'white', fontWeight: 700 }}>
-              Sistema de Gestión de Certificados Digitales
-            </Typography>
-            <Typography variant="body1" sx={{ color: 'rgba(255,255,255,0.75)', mt: 2 }}>
-              Siguiente paso: Emisión del documento.
-            </Typography>
-          </Box>
-
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {[
-              'Pago registrado y confirmado',
-              'Certificado en proceso de emisión',
-              'Comprobante enviado por email',
-            ].map((item, idx) => (
-              <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box sx={{ width: 6, height: 6, borderRadius: '50%', bgcolor: 'rgba(255,255,255,0.5)', flexShrink: 0, mr: 1.5 }} />
-                <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.85)' }}>{item}</Typography>
-              </Box>
-            ))}
-          </Box>
-
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.5)', mt: 'auto' }}>
-            Poder Judicial de la Provincia de Santa Fe — 2026
-          </Typography>
-        </Box>
-
-        {/* Columna derecha */}
-        <Box sx={{
-          width: { xs: '100%', md: '60%' },
-          bgcolor: 'white',
+          width: 72,
+          height: 72,
+          borderRadius: '50%',
+          bgcolor: '#ECFDF3',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          p: { xs: 3, md: 6 },
+          mx: 'auto',
+          mb: 3,
         }}>
-          <Box sx={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
-            <CheckCircleOutline sx={{ fontSize: 64, color: 'success.main', mb: 2 }} />
+          <CheckCircleOutline sx={{ fontSize: 42, color: '#00A91C' }} />
+        </Box>
 
-            <Typography variant="h4" sx={{ fontWeight: 700, color: '#1B1B1B' }}>
-              Pago confirmado
-            </Typography>
+        {/* Título */}
+        <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary', mb: 1 }}>
+          Pago confirmado
+        </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 3 }}>
+          Tu solicitud fue actualizada exitosamente. Recibirás un comprobante en tu correo registrado.
+        </Typography>
 
-            <Typography variant="body2" sx={{ color: '#71767A', mt: 1, textAlign: 'center' }}>
-              Tu solicitud fue actualizada exitosamente. Recibirás un comprobante en tu correo registrado.
-            </Typography>
-
-            <Typography variant="caption" sx={{ display: 'block', color: '#A9AEB1', mt: 2, textAlign: 'center' }}>
-              Registro de Actos y Documentos del Ámbito de la Magistratura
-            </Typography>
-
-            <Button
-              variant="contained"
-              fullWidth
-              onClick={() => {
-                queryClient.removeQueries({ queryKey: ['solicitud', id] });
-                queryClient.removeQueries({ queryKey: ['solicitud-historial', id] });
-                navigate(`/ciudadano/solicitudes/${id}`);
-              }}
-              sx={{
-                mt: 3, py: 1.5, borderRadius: '8px',
-                bgcolor: '#005EA2', fontSize: 15, fontWeight: 600,
-                textTransform: 'none',
-                boxShadow: '0 4px 12px rgba(0,94,162,0.3)',
-                '&:hover': { bgcolor: '#0F4A7C' },
-              }}
-            >
-              Ver detalle de la solicitud
-            </Button>
-
-            <Typography variant="body2" sx={{ color: '#71767A', mt: 2, textAlign: 'center' }}>
-              <Link to="/ciudadano/solicitudes" style={{ color: '#71767A' }}>
-                Volver a mis solicitudes
-              </Link>
-            </Typography>
+        {/* Resumen */}
+        <Box sx={{
+          bgcolor: '#EEF4FF',
+          borderLeft: '3px solid #005EA2',
+          borderRadius: 1,
+          p: 2,
+          mb: 3,
+          textAlign: 'left',
+        }}>
+          <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block', mb: 1, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+            Resumen
+          </Typography>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>Estado</Typography>
+            <Typography variant="body2" sx={{ color: '#00A91C', fontWeight: 700 }}>Pagado</Typography>
+          </Box>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            <Typography variant="body2" sx={{ color: 'text.primary' }}>N° Solicitud</Typography>
+            <Typography variant="body2" sx={{ color: 'text.primary', fontWeight: 600 }}>{id}</Typography>
           </Box>
         </Box>
+
+        {/* Checklist */}
+        <Box sx={{ mb: 3, textAlign: 'left' }}>
+          {[
+            'Pago registrado y confirmado',
+            'Certificado en proceso de emisión',
+            'Comprobante enviado por email',
+          ].map((item, idx) => (
+            <Box key={idx} sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <CheckCircleOutline sx={{ fontSize: 18, color: '#00A91C' }} />
+              <Typography variant="body2" sx={{ color: 'text.primary' }}>{item}</Typography>
+            </Box>
+          ))}
+        </Box>
+
+        {/* Botones */}
+        <Button
+          variant="contained"
+          fullWidth
+          onClick={() => navigate(`/ciudadano/solicitudes/${id}`, { replace: true })}
+          sx={{
+            bgcolor: '#005EA2',
+            borderRadius: '8px',
+            py: 1.5,
+            mb: 1.5,
+            '&:hover': { bgcolor: '#0F4A7C' },
+          }}
+        >
+          Ver detalle de la solicitud
+        </Button>
+        <Button
+          variant="text"
+          fullWidth
+          onClick={() => navigate('/ciudadano/solicitudes')}
+          sx={{ color: 'text.secondary' }}
+        >
+          Volver a mis solicitudes
+        </Button>
       </Box>
-    );
-  }
+
+      {/* Footer */}
+      <Typography variant="caption" sx={{ color: 'text.disabled', mt: 3 }}>
+        Registro de Actos y Documentos del Ámbito de la Magistradura
+      </Typography>
+    </Box>
+  );
+}
 
   if (isLoading) {
     return (
@@ -337,14 +363,14 @@ export default function DetalleSolicitudPage() {
                         )}
                         {item.estadoNuevo === 'PAGADO' && solicitud?.pago && ['interno', 'admin'].includes(user?.rol) && (
                           <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                            <Typography variant="caption" color="#71767A">
+                            <Typography variant="caption" color="text.secondary">
                               {solicitud.pago.estadoPago === 'APROBADO' ? 'Aprobado' : solicitud.pago.estadoPago} · {solicitud.pago.proveedorPago}
                             </Typography>
-                            <Typography variant="caption" color="#71767A">
+                            <Typography variant="caption" color="text.secondary">
                               ID: {solicitud.pago.idExterno}
                             </Typography>
                             {solicitud.pago.numeroTarjeta && (
-                              <Typography variant="caption" color="#71767A">
+                              <Typography variant="caption" color="text.secondary">
                                 {formatTarjetaMock(solicitud.pago.numeroTarjeta)}
                               </Typography>
                             )}
@@ -362,31 +388,31 @@ export default function DetalleSolicitudPage() {
 
       {/* Datos del pago (solo interno/admin en estado PAGADO) */}
       {solicitud.estado === 'PAGADO' && solicitud.pago != null && ['interno', 'admin'].includes(user?.rol) && (
-        <Card elevation={0} sx={{ border: '1px solid #DFE1E2', borderRadius: '8px', p: 3, mt: 3 }}>
+        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: 3, mt: 3 }}>
           <Typography variant="subtitle1" fontWeight={600}>Datos del pago</Typography>
           <Divider sx={{ my: 1.5 }} />
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Estado</Typography>
+              <Typography variant="caption" color="text.secondary">Estado</Typography>
               <Box><Chip label="Aprobado" color="success" size="small" /></Box>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Proveedor</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">{solicitud.pago.proveedorPago}</Typography>
+              <Typography variant="caption" color="text.secondary">Proveedor</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">{solicitud.pago.proveedorPago}</Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">ID de transacción</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">{solicitud.pago.idExterno}</Typography>
+              <Typography variant="caption" color="text.secondary">ID de transacción</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">{solicitud.pago.idExterno}</Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Monto</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">
+              <Typography variant="caption" color="text.secondary">Monto</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">
                 {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(solicitud.pago.monto)} ARS
               </Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Fecha de confirmación</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">
+              <Typography variant="caption" color="text.secondary">Fecha de confirmación</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">
                 {new Date(solicitud.pago.fechaConfirmacion).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </Typography>
             </Grid>
@@ -417,10 +443,10 @@ export default function DetalleSolicitudPage() {
                 <VerifiedIcon sx={{ color: '#00A91C', fontSize: 28 }} />
               </Box>
               <Box>
-                <Typography sx={{ fontWeight: 700, fontSize: 16, color: '#1B1B1B' }}>
+                <Typography sx={{ fontWeight: 700, fontSize: 16, color: 'text.primary' }}>
                   Certificado disponible
                 </Typography>
-                <Typography variant="body2" sx={{ color: '#71767A' }}>
+                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
                   Tu certificado fue emitido y esta listo para descargar.
                 </Typography>
               </Box>

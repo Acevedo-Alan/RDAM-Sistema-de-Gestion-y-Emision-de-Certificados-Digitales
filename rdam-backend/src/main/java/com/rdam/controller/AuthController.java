@@ -5,6 +5,7 @@ import com.rdam.dto.LoginOtpResponse;
 import com.rdam.dto.LoginRequest;
 import com.rdam.dto.LoginResponse;
 import com.rdam.dto.RefreshTokenRequest;
+import com.rdam.dto.RegisterRequest;
 import com.rdam.dto.VerifyOtpRequest;
 import com.rdam.service.AuthService;
 import com.rdam.service.EmailService;
@@ -39,6 +40,18 @@ public class AuthController {
         this.authService = authService;
         this.otpService = otpService;
         this.emailService = emailService;
+    }
+
+    @Operation(summary = "Registrar nuevo ciudadano")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Ciudadano registrado exitosamente"),
+            @ApiResponse(responseCode = "409", description = "Email o CUIL ya registrado"),
+            @ApiResponse(responseCode = "400", description = "Datos invalidos")
+    })
+    @PostMapping("/register")
+    public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
+        authService.registrarCiudadano(request);
+        return ResponseEntity.status(201).build();
     }
 
     @Operation(summary = "Iniciar sesion con CUIL o legajo — envia OTP al email")

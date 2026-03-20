@@ -32,35 +32,44 @@ public class ReporteServiceImpl implements ReporteService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public byte[] generarSolicitudesCsv(OffsetDateTime desde, OffsetDateTime hasta,
-                                         EstadoSolicitud estado, Integer circunscripcionId) {
-        log.info("action=ADMIN_REPORTE_SOLICITUDES_CSV desde={} hasta={} estado={} circunscripcionId={}",
-                desde, hasta, estado, circunscripcionId);
+@Transactional(readOnly = true)
+public byte[] generarSolicitudesCsv(OffsetDateTime desde, OffsetDateTime hasta,
+                                     EstadoSolicitud estado, Integer circunscripcionId) {
+    log.info("action=ADMIN_REPORTE_SOLICITUDES_CSV desde={} hasta={} estado={} circunscripcionId={}",
+            desde, hasta, estado, circunscripcionId);
 
-        List<Solicitud> solicitudes = solicitudRepository.findAllWithFilters(desde, hasta, estado, circunscripcionId);
+    // Evitar query con nulls — traer todo y filtrar en Java
+    List<Solicitud> todas = solicitudRepository.findAll();
+    
+    List<Solicitud> solicitudes = todas.stream()
+        .filter(s -> desde == null || !s.getCreatedAt().isBefore(desde))
+        .filter(s -> hasta == null || !s.getCreatedAt().isAfter(hasta))
+        .filter(s -> estado == null || s.getEstado() == estado)
+        .filter(s -> circunscripcionId == null || 
+                     s.getCircunscripcion().getId().equals(circunscripcionId))
+        .toList();
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("id,estado,tipoCertificado,circunscripcion,ciudadano,empleadoAsignado,montoArancel,createdAt\n");
+    StringBuilder sb = new StringBuilder();
+    sb.append("id,estado,tipoCertificado,circunscripcion,ciudadano,empleadoAsignado,montoArancel,createdAt\n");
 
-        for (Solicitud s : solicitudes) {
-            sb.append(s.getId()).append(',');
-            sb.append(s.getEstado().name()).append(',');
-            sb.append(escapeCsv(s.getTipoCertificado().getNombre())).append(',');
-            sb.append(escapeCsv(s.getCircunscripcion().getNombre())).append(',');
-            sb.append(escapeCsv(s.getCiudadano().getNombre() + " " + s.getCiudadano().getApellido())).append(',');
-            if (s.getEmpleadoAsignado() != null) {
-                sb.append(escapeCsv(s.getEmpleadoAsignado().getUsuario().getNombre() + " "
-                        + s.getEmpleadoAsignado().getUsuario().getApellido()));
-            }
-            sb.append(',');
-            sb.append(s.getMontoArancel()).append(',');
-            sb.append(s.getCreatedAt() != null ? s.getCreatedAt().format(CSV_DATE_FORMAT) : "");
-            sb.append('\n');
+    for (Solicitud s : solicitudes) {
+        sb.append(s.getId()).append(',');
+        sb.append(s.getEstado().name()).append(',');
+        sb.append(escapeCsv(s.getTipoCertificado().getNombre())).append(',');
+        sb.append(escapeCsv(s.getCircunscripcion().getNombre())).append(',');
+        sb.append(escapeCsv(s.getCiudadano().getNombre() + " " + s.getCiudadano().getApellido())).append(',');
+        if (s.getEmpleadoAsignado() != null) {
+            sb.append(escapeCsv(s.getEmpleadoAsignado().getUsuario().getNombre() + " "
+                    + s.getEmpleadoAsignado().getUsuario().getApellido()));
         }
-
-        return sb.toString().getBytes(StandardCharsets.UTF_8);
+        sb.append(',');
+        sb.append(s.getMontoArancel()).append(',');
+        sb.append(s.getCreatedAt() != null ? s.getCreatedAt().format(CSV_DATE_FORMAT) : "");
+        sb.append('\n');
     }
+
+    return sb.toString().getBytes(StandardCharsets.UTF_8);
+}
 
     @Override
     @Transactional(readOnly = true)

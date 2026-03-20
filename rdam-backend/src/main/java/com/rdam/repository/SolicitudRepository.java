@@ -60,16 +60,16 @@ public interface SolicitudRepository extends JpaRepository<Solicitud, Integer> {
 
     List<Solicitud> findByCreatedAtBetween(OffsetDateTime desde, OffsetDateTime hasta);
 
-    @Query("SELECT s FROM Solicitud s WHERE "
-            + "(:desde IS NULL OR s.createdAt >= :desde) AND "
-            + "(:hasta IS NULL OR s.createdAt <= :hasta) AND "
-            + "(:estado IS NULL OR s.estado = :estado) AND "
-            + "(:circId IS NULL OR s.circunscripcion.id = :circId)")
-    List<Solicitud> findAllWithFilters(@Param("desde") OffsetDateTime desde,
-                                       @Param("hasta") OffsetDateTime hasta,
-                                       @Param("estado") EstadoSolicitud estado,
-                                       @Param("circId") Integer circunscripcionId);
-
+    @Query(value = "SELECT * FROM solicitudes s WHERE "
+        + "(:desde IS NULL OR s.created_at >= :desde) AND "
+        + "(:hasta IS NULL OR s.created_at <= :hasta) AND "
+        + "(:estado IS NULL OR s.estado = CAST(:estado AS estado_solicitud)) AND "
+        + "(:circId IS NULL OR s.circunscripcion_id = :circId)",
+        nativeQuery = true)
+List<Solicitud> findAllWithFilters(@Param("desde") OffsetDateTime desde,
+                                   @Param("hasta") OffsetDateTime hasta,
+                                   @Param("estado") String estado,
+                                   @Param("circId") Integer circunscripcionId);
     // ── Métodos para endpoints de solicitudes ──
 
     List<Solicitud> findByCiudadanoIdOrderByCreatedAtDesc(Integer ciudadanoId);

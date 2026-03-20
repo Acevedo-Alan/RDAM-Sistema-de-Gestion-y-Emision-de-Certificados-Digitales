@@ -44,6 +44,27 @@ export default function HistorialPage() {
       headerName: 'N° Solicitud',
       width: 140,
       valueGetter: (value, row) => row.solicitudId ?? row.id ?? '',
+      renderCell: (params) => {
+        const sid = params.row.solicitudId ?? params.row.id;
+        if (!sid) return <span>—</span>;
+        return (
+          <Box
+            component="span"
+            sx={{
+              cursor: 'pointer',
+              color: 'primary.main',
+              textDecoration: 'underline',
+              '&:hover': { opacity: 0.8 },
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/interno/solicitudes/${sid}`);
+            }}
+          >
+            {sid}
+          </Box>
+        );
+      },
     },
     {
       field: 'estadoAnterior',
@@ -86,7 +107,7 @@ export default function HistorialPage() {
     <>
       <PageHeader title="Historial de solicitudes" />
 
-      <Card sx={{ border: '1px solid #DCDEE0', borderRadius: 2, p: 2, mb: 3 }}>
+      <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <TextField
             size="small"
@@ -132,33 +153,36 @@ export default function HistorialPage() {
           </Typography>
         </Box>
       ) : (
-        <Card sx={{ border: '1px solid #DCDEE0', borderRadius: 2, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+        <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           <DataGrid
             rows={historialItems}
             columns={columns}
             autoHeight
             pageSizeOptions={[10, 25, 50]}
+            disableRowSelectionOnClick
             initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
-            onRowClick={(params) => navigate(`/interno/solicitudes/${params.row.solicitudId ?? params.row.id}`)}
             sx={{
               border: 'none',
               '& .MuiDataGrid-columnHeaders': {
-                bgcolor: '#F0F0F0',
+                bgcolor: 'action.selected',
                 fontWeight: 700,
                 fontSize: 12,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
-                color: '#454545',
-                borderBottom: '1px solid #E6E6E6',
+                color: 'text.secondary',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
               },
+              '& .MuiDataGrid-columnHeaderTitle': { color: 'text.primary', fontWeight: 700 },
+              '& .MuiDataGrid-columnHeader': { color: 'text.primary' },
               '& .MuiDataGrid-row': {
-                cursor: 'pointer',
                 '&:hover': {
-                  bgcolor: '#F9F9F9',
+                  bgcolor: 'action.hover',
                 },
               },
               '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #E6E6E6',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
               },
             }}
           />

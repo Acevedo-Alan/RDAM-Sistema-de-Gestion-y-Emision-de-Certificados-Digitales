@@ -8,6 +8,7 @@ import com.rdam.domain.entity.Solicitud;
 import com.rdam.domain.entity.TipoCertificado;
 import com.rdam.domain.entity.Usuario;
 import com.rdam.dto.SolicitudResponse;
+import com.rdam.repository.CertificadoRepository;
 import com.rdam.repository.CircunscripcionRepository;
 import com.rdam.repository.EmpleadoRepository;
 import com.rdam.repository.SolicitudRepository;
@@ -56,6 +57,7 @@ public class SolicitudServiceImpl implements SolicitudService {
     private final EmpleadoRepository empleadoRepository;
     private final TipoCertificadoRepository tipoCertificadoRepository;
     private final CircunscripcionRepository circunscripcionRepository;
+    private final CertificadoRepository certificadoRepository;
     private final EntityManager entityManager;
     private final ApplicationEventPublisher eventPublisher;
 
@@ -64,6 +66,7 @@ public class SolicitudServiceImpl implements SolicitudService {
                                 EmpleadoRepository empleadoRepository,
                                 TipoCertificadoRepository tipoCertificadoRepository,
                                 CircunscripcionRepository circunscripcionRepository,
+                                CertificadoRepository certificadoRepository,
                                 EntityManager entityManager,
                                 ApplicationEventPublisher eventPublisher) {
         this.solicitudRepository = solicitudRepository;
@@ -71,6 +74,7 @@ public class SolicitudServiceImpl implements SolicitudService {
         this.empleadoRepository = empleadoRepository;
         this.tipoCertificadoRepository = tipoCertificadoRepository;
         this.circunscripcionRepository = circunscripcionRepository;
+        this.certificadoRepository = certificadoRepository;
         this.entityManager = entityManager;
         this.eventPublisher = eventPublisher;
     }
@@ -282,7 +286,8 @@ public class SolicitudServiceImpl implements SolicitudService {
         setRlsContext(userId, RolUsuario.valueOf(rol));
 
         List<EstadoSolicitud> estados = List.of(
-                EstadoSolicitud.PENDIENTE
+                EstadoSolicitud.PENDIENTE,
+                EstadoSolicitud.PAGADO
         );
 
         List<Solicitud> solicitudes;
@@ -441,6 +446,8 @@ public class SolicitudServiceImpl implements SolicitudService {
                 ? s.getCiudadano().getNombre() + " " + s.getCiudadano().getApellido() : null;
         String empleadoAsignado = s.getEmpleadoAsignado() != null
                 ? s.getEmpleadoAsignado().getLegajo() : null;
+        Integer certificadoId = certificadoRepository.findBySolicitudId(s.getId())
+                .map(c -> c.getId()).orElse(null);
 
         return new SolicitudResponse(
                 s.getId(),
@@ -453,7 +460,8 @@ public class SolicitudServiceImpl implements SolicitudService {
                 empleadoAsignado,
                 s.getMontoArancel(),
                 s.getCreatedAt(),
-                s.getUpdatedAt()
+                s.getUpdatedAt(),
+                certificadoId
         );
     }
 }

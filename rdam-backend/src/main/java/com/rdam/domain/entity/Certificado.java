@@ -55,10 +55,10 @@ public class Certificado {
     @Column(name = "fecha_emision", nullable = false)
     private OffsetDateTime fechaEmision;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false, insertable = false)
     private OffsetDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
+    @Column(name = "updated_at", nullable = false, insertable = false)
     private OffsetDateTime updatedAt;
 
     // -- Constructors --

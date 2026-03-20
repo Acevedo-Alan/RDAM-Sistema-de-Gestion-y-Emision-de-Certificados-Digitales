@@ -71,7 +71,7 @@ export default function RegisterPage() {
         sx={{
           width: 36,
           height: 36,
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
           borderRadius: '6px',
           display: 'flex',
           alignItems: 'center',
@@ -181,7 +181,7 @@ export default function RegisterPage() {
       <Box
         sx={{
           width: { xs: '100%', md: '60%' },
-          bgcolor: 'white',
+          bgcolor: 'background.paper',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

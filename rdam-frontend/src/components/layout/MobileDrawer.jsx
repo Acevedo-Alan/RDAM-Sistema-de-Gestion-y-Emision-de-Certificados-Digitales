@@ -1,7 +1,7 @@
 import { Drawer } from '@mui/material';
 import { SidebarContent } from './Sidebar';
 
-export default function MobileDrawer({ open, onClose }) {
+export default function MobileDrawer({ open, onClose, toggleMode, mode }) {
   return (
     <Drawer
       variant="temporary"
@@ -10,10 +10,10 @@ export default function MobileDrawer({ open, onClose }) {
       onClose={onClose}
       sx={{
         display: { xs: 'block', md: 'none' },
-        '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box', bgcolor: '#1B1B1B' },
+        '& .MuiDrawer-paper': { width: 240, boxSizing: 'border-box', bgcolor: 'background.paper' },
       }}
     >
-      <SidebarContent onNavigate={onClose} />
+      <SidebarContent onNavigate={onClose} toggleMode={toggleMode} mode={mode} />
     </Drawer>
   );
 }

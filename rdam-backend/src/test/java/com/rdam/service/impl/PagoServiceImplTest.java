@@ -68,7 +68,8 @@ class PagoServiceImplTest {
         pagoService = new PagoServiceImpl(
                 solicitudRepository, pagoRepository, cryptoService,
                 entityManager, eventPublisher, objectMapper,
-                "RDAM-MOCK-001", "http://localhost:8081/pluspagos");
+                "RDAM-MOCK-001", "http://localhost:8081/pluspagos",
+                "http://localhost:8080", "http://localhost:5173");
 
         ciudadano = new Usuario();
         ciudadano.setId(1);

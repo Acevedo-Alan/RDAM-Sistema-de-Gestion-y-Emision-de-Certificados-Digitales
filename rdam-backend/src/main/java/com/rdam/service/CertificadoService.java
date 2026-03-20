@@ -10,7 +10,7 @@ public interface CertificadoService {
      * Transiciona PAGADA -> EMITIDA.
      * No permite doble emision.
      */
-    Certificado emitirCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId);
+    Certificado emitirCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId, String rol);
 
     /**
      * Genera el PDF del certificado en memoria.
@@ -22,7 +22,7 @@ public interface CertificadoService {
      * Publica un certificado: genera PDF con iText, guarda en disco,
      * crea registro en certificados, transiciona PAGADO -> PUBLICADO.
      */
-    Certificado publicarCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId);
+    Certificado publicarCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId, String rol);
 
     /**
      * Descarga el PDF de un certificado desde disco.

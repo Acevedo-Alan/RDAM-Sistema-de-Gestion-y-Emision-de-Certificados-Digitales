@@ -7,6 +7,7 @@ import com.rdam.dto.RechazoRequest;
 import com.rdam.dto.SolicitudPagoResponse;
 import com.rdam.dto.SolicitudRequest;
 import com.rdam.dto.SolicitudResponse;
+import com.rdam.repository.CertificadoRepository;
 import com.rdam.security.service.CustomUserDetails;
 import com.rdam.service.CertificadoService;
 import com.rdam.service.HistorialService;
@@ -43,15 +44,18 @@ public class SolicitudController {
     private final SolicitudService solicitudService;
     private final PagoService pagoService;
     private final CertificadoService certificadoService;
+    private final CertificadoRepository certificadoRepository;
     private final HistorialService historialService;
 
     public SolicitudController(SolicitudService solicitudService,
                                PagoService pagoService,
                                CertificadoService certificadoService,
+                               CertificadoRepository certificadoRepository,
                                HistorialService historialService) {
         this.solicitudService = solicitudService;
         this.pagoService = pagoService;
         this.certificadoService = certificadoService;
+        this.certificadoRepository = certificadoRepository;
         this.historialService = historialService;
     }
 
@@ -219,7 +223,8 @@ public class SolicitudController {
         certificadoService.emitirCertificado(
                 id,
                 user.getUserId(),
-                user.getCircunscripcionId().longValue()
+                user.getCircunscripcionId().longValue(),
+                user.getRol()
         );
         return ResponseEntity.ok().build();
     }
@@ -237,7 +242,8 @@ public class SolicitudController {
         certificadoService.publicarCertificado(
                 id,
                 user.getUserId(),
-                user.getCircunscripcionId().longValue()
+                user.getCircunscripcionId().longValue(),
+                user.getRol()
         );
         return ResponseEntity.ok().build();
     }
@@ -317,6 +323,8 @@ public class SolicitudController {
                 ? s.getCiudadano().getNombre() + " " + s.getCiudadano().getApellido() : null;
         String empleadoAsignado = s.getEmpleadoAsignado() != null
                 ? s.getEmpleadoAsignado().getLegajo() : null;
+        Integer certificadoId = certificadoRepository.findBySolicitudId(s.getId())
+                .map(c -> c.getId()).orElse(null);
 
         return new SolicitudResponse(
                 s.getId(),
@@ -329,7 +337,8 @@ public class SolicitudController {
                 empleadoAsignado,
                 s.getMontoArancel(),
                 s.getCreatedAt(),
-                s.getUpdatedAt()
+                s.getUpdatedAt(),
+                certificadoId
         );
     }
 }

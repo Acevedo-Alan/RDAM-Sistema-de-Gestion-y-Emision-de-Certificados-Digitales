@@ -36,6 +36,8 @@ services:
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/rdam_prod
       SPRING_DATASOURCE_USERNAME: rdam_app_user
+      APP_BACKEND_URL: http://app:8080
+      APP_FRONTEND_URL: http://localhost
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health || exit 1"]
       interval: 30s

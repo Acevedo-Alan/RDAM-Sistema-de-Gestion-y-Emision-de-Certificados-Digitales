@@ -3,6 +3,7 @@ package com.rdam.config;
 import com.rdam.dto.ErrorResponse;
 import com.rdam.service.exception.AccesoDenegadoException;
 import com.rdam.service.exception.ConcurrenciaException;
+import com.rdam.service.exception.ConflictoException;
 import com.rdam.service.exception.EstadoInvalidoException;
 import com.rdam.service.exception.RecursoNoEncontradoException;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -41,6 +42,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleEstadoInvalido(EstadoInvalidoException ex) {
         log.warn("Estado invalido: {}", ex.getMessage());
         return buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, "Estado invalido", ex.getMessage());
+    }
+
+    @ExceptionHandler(ConflictoException.class)
+    public ResponseEntity<ErrorResponse> handleConflicto(ConflictoException ex) {
+        log.warn("Conflicto: {}", ex.getMessage());
+        return buildResponse(HttpStatus.CONFLICT, "Conflicto", ex.getMessage());
     }
 
     @ExceptionHandler(ConcurrenciaException.class)

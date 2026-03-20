@@ -14,6 +14,7 @@ public record SolicitudResponse(
         String empleadoAsignado,
         BigDecimal montoArancel,
         OffsetDateTime createdAt,
-        OffsetDateTime updatedAt
+        OffsetDateTime updatedAt,
+        Integer certificadoId
 ) {
 }

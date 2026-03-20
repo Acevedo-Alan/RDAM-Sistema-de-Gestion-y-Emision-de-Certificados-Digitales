@@ -78,12 +78,12 @@ public class CertificadoServiceImpl implements CertificadoService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public Certificado emitirCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId) {
+    public Certificado emitirCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId, String rol) {
         Solicitud solicitud = buscarSolicitudConLock(solicitudId);
 
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
-                        "No se encontro el empleado con ID: " + empleadoId));
+        Empleado empleado = empleadoRepository.findByUsuarioId(empleadoId)
+        .orElseThrow(() -> new RecursoNoEncontradoException(
+                "No se encontro el empleado con usuarioId: " + empleadoId));
 
         if (!solicitud.getCircunscripcion().getId().equals(circunscripcionId.intValue())) {
             throw new AccesoDenegadoException(
@@ -114,7 +114,7 @@ public class CertificadoServiceImpl implements CertificadoService {
         certificado.setEmitidoPor(empleado);
         certificado.setFechaEmision(OffsetDateTime.now());
 
-        setRlsContext(empleado.getUsuario().getId(), RolUsuario.interno);
+        setRlsContext(empleado.getUsuario().getId(), RolUsuario.valueOf(rol));
 
         solicitud.setEstado(EstadoSolicitud.PUBLICADO);
         solicitud.setFechaEmision(OffsetDateTime.now());
@@ -169,12 +169,12 @@ public class CertificadoServiceImpl implements CertificadoService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED)
-    public Certificado publicarCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId) {
+    public Certificado publicarCertificado(Integer solicitudId, Integer empleadoId, Long circunscripcionId, String rol) {
         Solicitud solicitud = buscarSolicitudConLock(solicitudId);
 
-        Empleado empleado = empleadoRepository.findById(empleadoId)
-                .orElseThrow(() -> new RecursoNoEncontradoException(
-                        "No se encontro el empleado con ID: " + empleadoId));
+        Empleado empleado = empleadoRepository.findByUsuarioId(empleadoId)
+        .orElseThrow(() -> new RecursoNoEncontradoException(
+                "No se encontro el empleado con usuarioId: " + empleadoId));
 
         if (!solicitud.getCircunscripcion().getId().equals(circunscripcionId.intValue())) {
             throw new AccesoDenegadoException(
@@ -216,7 +216,7 @@ public class CertificadoServiceImpl implements CertificadoService {
         certificado.setFechaEmision(OffsetDateTime.now());
 
         // RLS antes de flush
-        setRlsContext(empleado.getUsuario().getId(), RolUsuario.interno);
+        setRlsContext(empleado.getUsuario().getId(), RolUsuario.valueOf(rol));
 
         // Transicion de estado
         solicitud.setEstado(EstadoSolicitud.PUBLICADO);

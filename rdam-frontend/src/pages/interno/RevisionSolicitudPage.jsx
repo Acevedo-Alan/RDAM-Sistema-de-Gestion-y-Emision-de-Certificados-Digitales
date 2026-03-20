@@ -107,7 +107,16 @@ export default function RevisionSolicitudPage() {
   }
 
   if (isError) {
-    return <Alert severity="error">Error al cargar la solicitud</Alert>;
+    return (
+      <Box sx={{ p: 4, textAlign: 'center' }}>
+        <Alert severity="warning" sx={{ justifyContent: 'center' }}>
+          Esta solicitud no existe o no tenés acceso a ella.
+        </Alert>
+        <Button sx={{ mt: 2 }} variant="outlined" onClick={() => navigate(-1)}>
+          Volver
+        </Button>
+      </Box>
+    );
   }
 
   const estado = solicitud?.estado;
@@ -211,14 +220,14 @@ export default function RevisionSolicitudPage() {
                         )}
                         {item.estadoNuevo === 'PAGADO' && solicitud?.pago && (
                           <Box sx={{ mt: 0.5, display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                            <Typography variant="caption" color="#71767A">
+                            <Typography variant="caption" color="text.secondary">
                               {solicitud.pago.estadoPago === 'APROBADO' ? 'Aprobado' : solicitud.pago.estadoPago} · {solicitud.pago.proveedorPago}
                             </Typography>
-                            <Typography variant="caption" color="#71767A">
+                            <Typography variant="caption" color="text.secondary">
                               ID: {solicitud.pago.idExterno}
                             </Typography>
                             {solicitud.pago.numeroTarjeta && (
-                              <Typography variant="caption" color="#71767A">
+                              <Typography variant="caption" color="text.secondary">
                                 {formatTarjetaMock(solicitud.pago.numeroTarjeta)}
                               </Typography>
                             )}
@@ -236,31 +245,31 @@ export default function RevisionSolicitudPage() {
 
       {/* Datos del pago */}
       {solicitud.estado === 'PAGADO' && solicitud.pago != null && (
-        <Card elevation={0} sx={{ border: '1px solid #DFE1E2', borderRadius: '8px', p: 3, mt: 3 }}>
+        <Card elevation={0} sx={{ border: '1px solid', borderColor: 'divider', borderRadius: '8px', p: 3, mt: 3 }}>
           <Typography variant="subtitle1" fontWeight={600}>Datos del pago</Typography>
           <Divider sx={{ my: 1.5 }} />
           <Grid container spacing={2}>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Estado</Typography>
+              <Typography variant="caption" color="text.secondary">Estado</Typography>
               <Box><Chip label="Aprobado" color="success" size="small" /></Box>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Proveedor</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">{solicitud.pago.proveedorPago}</Typography>
+              <Typography variant="caption" color="text.secondary">Proveedor</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">{solicitud.pago.proveedorPago}</Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">ID de transacción</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">{solicitud.pago.idExterno}</Typography>
+              <Typography variant="caption" color="text.secondary">ID de transacción</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">{solicitud.pago.idExterno}</Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Monto</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">
+              <Typography variant="caption" color="text.secondary">Monto</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">
                 {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' }).format(solicitud.pago.monto)} ARS
               </Typography>
             </Grid>
             <Grid item xs={12} md={6}>
-              <Typography variant="caption" color="#71767A">Fecha de confirmación</Typography>
-              <Typography variant="body2" fontWeight={500} color="#1B1B1B">
+              <Typography variant="caption" color="text.secondary">Fecha de confirmación</Typography>
+              <Typography variant="body2" fontWeight={500} color="text.primary">
                 {new Date(solicitud.pago.fechaConfirmacion).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
               </Typography>
             </Grid>

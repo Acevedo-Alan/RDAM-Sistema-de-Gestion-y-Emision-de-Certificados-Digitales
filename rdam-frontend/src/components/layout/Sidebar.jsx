@@ -10,6 +10,8 @@ import {
   History as HistoryIcon,
   Logout as LogoutIcon,
   Dashboard as DashboardIcon,
+  DarkMode,
+  LightMode,
 } from '@mui/icons-material';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -49,15 +51,16 @@ function NavItems({ items, onNavigate }) {
                 gap: 1.5,
                 px: '16px',
                 py: '8px',
-                borderRadius: '4px',
+                borderRadius: '8px',
                 mb: '2px',
                 fontSize: 14,
                 transition: 'all 0.2s',
-                bgcolor: isActive ? '#005EA2' : 'transparent',
-                color: isActive ? '#FFFFFF' : '#A9AEB1',
-                '&:hover': isActive
-                  ? {}
-                  : { bgcolor: '#454545', color: '#FFFFFF' },
+                borderLeft: isActive ? '3px solid #005EA2' : '3px solid transparent',
+                bgcolor: isActive ? '#EEF4FF' : 'transparent',
+                color: isActive ? '#005EA2' : '#71767A',
+                '&:hover': {
+                  bgcolor: isActive ? '#EEF4FF' : '#F0F0F0',
+                },
               }}
             >
               <Box sx={{ display: 'flex', fontSize: 18, opacity: 0.8, color: 'inherit' }}>{item.icon}</Box>
@@ -70,14 +73,14 @@ function NavItems({ items, onNavigate }) {
   );
 }
 
-function SidebarContent({ onNavigate }) {
+function SidebarContent({ onNavigate, toggleMode, mode }) {
   const { user, logout } = useAuth();
   const items = menuByRole[user?.rol] || [];
   const emailStr = user?.email || user?.sub || '';
   const initial = emailStr.charAt(0).toUpperCase();
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: '#1B1B1B' }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.paper' }}>
       {/* Logo header */}
       <Box
         sx={{
@@ -86,7 +89,8 @@ function SidebarContent({ onNavigate }) {
           gap: 1.5,
           px: 3,
           py: 3,
-          borderBottom: '1px solid #454545',
+          borderBottom: '1px solid',
+          borderColor: 'divider',
         }}
       >
         <Box
@@ -105,11 +109,62 @@ function SidebarContent({ onNavigate }) {
             R
           </Typography>
         </Box>
-        <Typography sx={{ color: '#FFFFFF', fontWeight: 600, fontSize: 16 }}>RDAM</Typography>
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.2 }}>
+            RDAM
+          </Typography>
+          <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+            Sistema de Certificados
+          </Typography>
+        </Box>
       </Box>
 
       {/* Nav */}
       <NavItems items={items} onNavigate={onNavigate} />
+
+      {/* Dark mode toggle */}
+      <Box sx={{ px: 1, pb: 1 }}>
+        <Box
+          onClick={toggleMode}
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            px: 2,
+            py: 1,
+            mx: 1,
+            mb: 1,
+            borderRadius: '999px',
+            cursor: 'pointer',
+            bgcolor: (theme) =>
+              theme.palette.mode === 'light'
+                ? 'rgba(0, 0, 0, 0.06)'
+                : 'rgba(255, 255, 255, 0.08)',
+            border: '1px solid',
+            borderColor: (theme) =>
+              theme.palette.mode === 'light'
+                ? 'rgba(0, 0, 0, 0.12)'
+                : 'rgba(255, 255, 255, 0.12)',
+            color: 'text.secondary',
+            transition: 'all 0.2s',
+            '&:hover': {
+              bgcolor: (theme) =>
+                theme.palette.mode === 'light'
+                  ? 'rgba(0, 0, 0, 0.10)'
+                  : 'rgba(255, 255, 255, 0.14)',
+              color: 'text.primary',
+            },
+          }}
+        >
+          {mode === 'dark'
+            ? <LightMode sx={{ fontSize: 18 }} />
+            : <DarkMode sx={{ fontSize: 18 }} />
+          }
+          <Typography variant="body2" sx={{ fontSize: 13, fontWeight: 500 }}>
+            {mode === 'dark' ? 'Modo claro' : 'Modo oscuro'}
+          </Typography>
+        </Box>
+      </Box>
 
       {/* User footer */}
       <Box
@@ -119,7 +174,8 @@ function SidebarContent({ onNavigate }) {
           gap: 1.5,
           px: 2,
           py: 1.5,
-          borderTop: '1px solid #454545',
+          borderTop: '1px solid',
+          borderColor: 'divider',
         }}
       >
         <Avatar sx={{ width: 32, height: 32, bgcolor: '#005EA2', color: '#FFFFFF', fontSize: 14 }}>
@@ -131,20 +187,20 @@ function SidebarContent({ onNavigate }) {
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
-            color: '#A9AEB1',
+            color: 'text.secondary',
             fontSize: 13,
           }}
         >
           {emailStr}
         </Typography>
-        <IconButton size="small" onClick={logout} title="Cerrar sesion" sx={{ color: '#A9AEB1' }}>
+        <IconButton size="small" onClick={logout} title="Cerrar sesion" sx={{ color: 'text.secondary' }}>
           <LogoutIcon fontSize="small" />
         </IconButton>
       </Box>
 
       {/* Version tag */}
-      <Box sx={{ px: 2, py: 1.5, borderTop: '1px solid #454545', textAlign: 'center' }}>
-        <Typography sx={{ color: '#71767A', fontSize: 11, fontWeight: 500 }}>
+      <Box sx={{ px: 2, py: 1.5, borderTop: '1px solid', borderColor: 'divider', textAlign: 'center' }}>
+        <Typography sx={{ color: 'text.secondary', fontSize: 11, fontWeight: 500 }}>
           v1.0
         </Typography>
       </Box>
@@ -152,7 +208,7 @@ function SidebarContent({ onNavigate }) {
   );
 }
 
-export default function Sidebar() {
+export default function Sidebar({ toggleMode, mode }) {
   return (
     <Box
       component="aside"
@@ -165,10 +221,12 @@ export default function Sidebar() {
         height: '100vh',
         width: 240,
         zIndex: 100,
-        backgroundColor: '#1B1B1B',
+        bgcolor: 'background.paper',
+        borderRight: '1px solid',
+        borderColor: 'divider',
       }}
     >
-      <SidebarContent />
+      <SidebarContent toggleMode={toggleMode} mode={mode} />
     </Box>
   );
 }

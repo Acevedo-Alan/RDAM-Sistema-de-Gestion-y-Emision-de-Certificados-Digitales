@@ -114,6 +114,7 @@ export default function BandejaPage() {
       field: 'estado',
       headerName: 'Estado',
       width: 160,
+      minWidth: 160,
       renderCell: (params) => <StatusBadge estado={params.value} />,
     },
     {
@@ -168,7 +169,7 @@ export default function BandejaPage() {
     <>
       <PageHeader title="Bandeja de solicitudes" />
 
-      <Card sx={{ border: '1px solid #DCDEE0', borderRadius: 2, p: 2, mb: 3 }}>
+      <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, p: 2, mb: 3 }}>
         <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'flex-end' }}>
           <TextField
             size="small"
@@ -232,7 +233,7 @@ export default function BandejaPage() {
           </Typography>
         </Box>
       ) : (
-        <Card sx={{ border: '1px solid #DCDEE0', borderRadius: 2, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+        <Card sx={{ border: '1px solid', borderColor: 'divider', borderRadius: 2, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           <DataGrid
             rows={solicitudesConDias}
             columns={columns}
@@ -246,21 +247,25 @@ export default function BandejaPage() {
             sx={{
               border: 'none',
               '& .MuiDataGrid-columnHeaders': {
-                bgcolor: '#F0F0F0',
+                bgcolor: 'action.selected',
                 fontWeight: 700,
                 fontSize: 12,
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
-                color: '#454545',
-                borderBottom: '1px solid #E6E6E6',
+                color: 'text.secondary',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
               },
+              '& .MuiDataGrid-columnHeaderTitle': { color: 'text.primary', fontWeight: 700 },
+              '& .MuiDataGrid-columnHeader': { color: 'text.primary' },
               '& .MuiDataGrid-row': {
                 '&:hover': {
-                  bgcolor: '#F9F9F9',
+                  bgcolor: 'action.hover',
                 },
               },
               '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #E6E6E6',
+                borderBottom: '1px solid',
+                borderColor: 'divider',
               },
               '& .fila-demorada': {
                 bgcolor: 'rgba(255,190,46,0.12)',
